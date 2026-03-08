@@ -230,17 +230,17 @@ const Dashboard = () => {
             {/* Background */}
             <div className="card-elevated p-6">
               <h3 className="font-display font-semibold text-foreground mb-4">{t("dashboard.background")}</h3>
-              <div className="flex gap-3">
-                {bgColors.map((bg) => (
+              <div className="grid grid-cols-4 gap-2">
+                {BG_OPTIONS.map((bg) => (
                   <button
                     key={bg.key}
-                    onClick={() => setBgColor(bg.key)}
-                    className={`flex flex-col items-center gap-2 flex-1 p-3 rounded-lg transition-all border ${
-                      bgColor === bg.key ? "border-primary ring-2 ring-primary/20" : "border-border"
+                    onClick={() => setBgStyle(bg.key)}
+                    className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all border ${
+                      bgStyle === bg.key ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full ${bg.color}`} />
-                    <span className="text-xs font-medium">{t(`dashboard.${bg.key}`)}</span>
+                    <div className={`w-8 h-8 rounded-md ${bg.preview}`} />
+                    <span className="text-[10px] font-medium leading-tight text-center">{bg.label}</span>
                   </button>
                 ))}
               </div>
