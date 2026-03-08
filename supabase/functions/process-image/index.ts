@@ -30,7 +30,7 @@ serve(async (req) => {
 
     
 
-    const prompt = `You are a professional fashion photographer. Take this exact clothing item and create a stunning studio fashion photo. The clothing should appear worn by a completely invisible body - no mannequin, no person visible at all. The garment should float naturally in the air as if worn, with realistic fabric folds and 3D shape. Style: High-end fashion editorial, dramatic studio lighting, clean gradient background (${bg_color === 'grey' ? 'light grey to medium grey' : 'white to light grey'}). The result should look like a $10,000 professional photoshoot. Maintain exact colors, patterns and details of the original clothing.`;
+    const prompt = `Take this clothing item and generate a professional fashion photo showing it worn by an invisible ghost mannequin floating in the air. The clothing should look naturally worn with 3D shape, on a clean ${bg_color === 'grey' ? 'grey studio' : 'white/studio'} background. Professional e-commerce style.`;
 
     console.log('Calling Lovable AI Gateway for image generation...');
 
