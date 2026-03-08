@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const PROMPT = `Edit this image: Remove the background completely. 
+const BASE_PROMPT = `Edit this image: Remove the background completely. 
 
 Keep only the clothing items. 
 
@@ -18,8 +18,6 @@ The jacket should be open and full, pants should have leg shape.
 Float them slightly in the air.
 
 Add professional studio lighting with soft shadows below.
-
-Pure white background.
 
 Result must look like a professional e-commerce product photo.`;
 
