@@ -32,8 +32,15 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const { image_base64 } = await req.json();
+    const { image_base64, background } = await req.json();
     if (!image_base64) throw new Error('No image provided');
+
+    let finalPrompt = BASE_PROMPT;
+    if (background) {
+      finalPrompt += `\n\nPlace the floating ghost mannequin clothing in this setting: ${background}. Keep the clothing as the main focus, background should be artistic but not distracting.`;
+    } else {
+      finalPrompt += `\n\nPure white background.`;
+    }
 
     // Ensure it's a proper data URL
     let imageUrl = image_base64;
