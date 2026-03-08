@@ -80,7 +80,7 @@ const Dashboard = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [style, setStyle] = useState<Style>("ghost");
-  const [bgColor, setBgColor] = useState<BgColor>("white");
+  const [bgStyle, setBgStyle] = useState<BgStyle>("white-studio");
   const [processing, setProcessing] = useState(false);
   const [usedImages, setUsedImages] = useState(7);
   const totalImages = 20;
