@@ -28,7 +28,7 @@ serve(async (req) => {
       imageUrl = `data:image/png;base64,${imageUrl}`;
     }
 
-    const bgDescription = bg_color === 'grey' ? 'a neutral grey studio background' : 'a clean white studio background';
+    
 
     const prompt = `You are a professional fashion photographer. Take this exact clothing item and create a stunning studio fashion photo. The clothing should appear worn by a completely invisible body - no mannequin, no person visible at all. The garment should float naturally in the air as if worn, with realistic fabric folds and 3D shape. Style: High-end fashion editorial, dramatic studio lighting, clean gradient background (${bg_color === 'grey' ? 'light grey to medium grey' : 'white to light grey'}). The result should look like a $10,000 professional photoshoot. Maintain exact colors, patterns and details of the original clothing.`;
 
