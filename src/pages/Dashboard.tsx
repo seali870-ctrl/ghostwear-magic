@@ -107,8 +107,9 @@ const Dashboard = () => {
     }
     setProcessing(true);
     try {
+      const selectedBg = BG_OPTIONS.find((b) => b.key === bgStyle);
       const { data, error } = await supabase.functions.invoke('process-image', {
-        body: { image_base64: uploadedImage },
+        body: { image_base64: uploadedImage, background: selectedBg?.description || "" },
       });
 
       if (error) throw error;
