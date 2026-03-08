@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -11,75 +11,58 @@ serve(async (req) => {
   }
 
   try {
-    const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
-    if (!REPLICATE_API_TOKEN) {
-      throw new Error('REPLICATE_API_TOKEN is not configured');
+    const REMOVE_BG_API_KEY = Deno.env.get('REMOVE_BG_API_KEY');
+    if (!REMOVE_BG_API_KEY) {
+      throw new Error('REMOVE_BG_API_KEY is not configured');
     }
 
-    const { image_base64, style, bg_color } = await req.json();
+    const { image_base64, bg_color } = await req.json();
 
     if (!image_base64) {
       throw new Error('No image provided');
     }
 
-    // Use a background removal model on Replicate
-    // cjwbw/rembg is a reliable background removal model
-    const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
+    // Strip data URL prefix if present
+    const base64Data = image_base64.replace(/^data:image\/\w+;base64,/, '');
+
+    const formData = new FormData();
+    // Convert base64 to blob
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'image/png' });
+    formData.append('image_file', blob, 'image.png');
+    formData.append('size', 'auto');
+
+    // Set background color
+    if (bg_color === 'white') {
+      formData.append('bg_color', 'FFFFFF');
+    } else if (bg_color === 'grey') {
+      formData.append('bg_color', 'E5E5E5');
+    }
+    // transparent = no bg_color param (default)
+
+    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
+        'X-Api-Key': REMOVE_BG_API_KEY,
       },
-      body: JSON.stringify({
-        version: "fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003",
-        input: {
-          image: image_base64,
-        },
-      }),
+      body: formData,
     });
 
-    if (!createResponse.ok) {
-      const errorText = await createResponse.text();
-      throw new Error(`Replicate create prediction failed [${createResponse.status}]: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Remove.bg API failed [${response.status}]: ${errorText}`);
     }
 
-    const prediction = await createResponse.json();
-    let result = prediction;
+    // Response is the image binary
+    const imageBuffer = await response.arrayBuffer();
+    const resultBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    const resultDataUrl = `data:image/png;base64,${resultBase64}`;
 
-    // Poll for completion
-    const maxAttempts = 60;
-    let attempts = 0;
-
-    while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
-        headers: {
-          'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
-        },
-      });
-
-      if (!pollResponse.ok) {
-        const errorText = await pollResponse.text();
-        throw new Error(`Replicate poll failed [${pollResponse.status}]: ${errorText}`);
-      }
-
-      result = await pollResponse.json();
-      attempts++;
-    }
-
-    if (result.status === 'failed') {
-      throw new Error(`Replicate processing failed: ${result.error || 'Unknown error'}`);
-    }
-
-    if (result.status !== 'succeeded') {
-      throw new Error('Processing timed out');
-    }
-
-    // result.output is the URL of the processed image
-    const outputUrl = typeof result.output === 'string' ? result.output : result.output?.[0] || result.output;
-
-    return new Response(JSON.stringify({ success: true, output_url: outputUrl }), {
+    return new Response(JSON.stringify({ success: true, output_url: resultDataUrl }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
