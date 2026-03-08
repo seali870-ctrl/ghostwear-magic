@@ -92,7 +92,7 @@ serve(async (req) => {
       if (status.status === 'COMPLETED') {
         // Fetch result
         const resultResp = await fetch(
-          `https://queue.fal.run/fal-ai/fashion-product-photos/requests/${request_id}`,
+          `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}`,
           { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
         );
 
