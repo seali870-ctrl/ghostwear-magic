@@ -50,8 +50,8 @@ serve(async (req) => {
     }
 
     // Step 2: Submit to fal.ai queue
-    console.log('Submitting to fal-ai/fashion-product-photos...');
-    const submitResp = await fetch('https://queue.fal.run/fal-ai/fashion-product-photos', {
+    console.log('Submitting to fal-ai/image-apps-v2/product-photography...');
+    const submitResp = await fetch('https://queue.fal.run/fal-ai/image-apps-v2/product-photography', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_API_KEY}`,
