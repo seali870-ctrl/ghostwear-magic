@@ -41,7 +41,7 @@ serve(async (req) => {
         // Fetch result
         const resultResp = await fetch(
           `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}`,
-          { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
+          { method: 'GET', headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
         );
         if (!resultResp.ok) throw new Error('Failed to fetch result');
         const result = await resultResp.json();
