@@ -5,142 +5,108 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const PROMPT = `You are an expert fashion photo editor. 
+
+I will give you a flat or mannequin clothing photo.
+
+Your task:
+
+1. Remove the background - make it pure white
+
+2. Make the clothing look like it is worn by an invisible ghost body
+
+3. Give the fabric natural 3D shape and realistic folds
+
+4. The clothing should float slightly above ground
+
+5. Add soft professional shadow beneath
+
+6. Studio lighting, high-end e-commerce style
+
+7. Keep exact same colors, logo, patterns from original
+
+8. Final result: pure white background, floating clothes, invisible body inside`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
-    if (!FAL_API_KEY) {
-      throw new Error('FAL_API_KEY is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const body = await req.json();
-    const { action } = body;
-
-    // ACTION: check-status — single poll for a given request_id
-    if (action === 'check-status') {
-      const { request_id } = body;
-      if (!request_id) throw new Error('Missing request_id');
-
-      const statusResp = await fetch(
-        `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}/status`,
-        { method: 'GET', headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
-      );
-
-      if (!statusResp.ok) {
-        const errText = await statusResp.text();
-        throw new Error(`Status check failed [${statusResp.status}]: ${errText}`);
-      }
-
-      const status = await statusResp.json();
-      console.log('Status check:', status.status);
-
-      if (status.status === 'COMPLETED') {
-        // Fetch result
-        const resultResp = await fetch(
-          `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}`,
-          { method: 'GET', headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
-        );
-        if (!resultResp.ok) throw new Error('Failed to fetch result');
-        const result = await resultResp.json();
-        console.log('Result keys:', Object.keys(result));
-
-        const outputUrl = result.image?.url || result.images?.[0]?.url || result.output?.url || result.url;
-        if (!outputUrl) {
-          console.error('Result structure:', JSON.stringify(result).slice(0, 500));
-          throw new Error('No output image found in response');
-        }
-
-        return new Response(JSON.stringify({ status: 'COMPLETED', output_url: outputUrl }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      if (status.status === 'FAILED') {
-        return new Response(JSON.stringify({ status: 'FAILED', error: status.error || 'Processing failed' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Still processing
-      return new Response(JSON.stringify({ status: status.status || 'IN_PROGRESS' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // ACTION: submit (default) — upload image and submit to queue
-    const { image_base64, bg_color } = body;
+    const { image_base64 } = await req.json();
     if (!image_base64) throw new Error('No image provided');
 
+    // Ensure it's a proper data URL
     let imageUrl = image_base64;
     if (!imageUrl.startsWith('data:')) {
       imageUrl = `data:image/png;base64,${imageUrl}`;
     }
 
-    // Upload image to fal.ai storage
-    console.log('Uploading image to fal.ai storage...');
-    const imageBlob = await (await fetch(imageUrl)).blob();
-    
-    const uploadResp = await fetch('https://fal.ai/api/cdn/upload', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Key ${FAL_API_KEY}`,
-        'Content-Type': imageBlob.type || 'image/png',
-      },
-      body: imageBlob,
-    });
+    console.log('Calling Lovable AI Gateway with gemini-2.5-flash-image...');
 
-    let productImageUrl = imageUrl;
-    if (uploadResp.ok) {
-      const uploadData = await uploadResp.json();
-      productImageUrl = uploadData.access_url || uploadData.url || imageUrl;
-      console.log('Image uploaded:', productImageUrl);
-    } else {
-      console.log('CDN upload failed, trying multipart...');
-      // Fallback: try multipart upload
-      const form = new FormData();
-      form.append('file', imageBlob, 'clothing.png');
-      const upload2 = await fetch('https://fal.ai/api/cdn/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Key ${FAL_API_KEY}` },
-        body: form,
-      });
-      if (upload2.ok) {
-        const d = await upload2.json();
-        productImageUrl = d.access_url || d.url || imageUrl;
-        console.log('Multipart upload succeeded:', productImageUrl);
-      } else {
-        console.log('All uploads failed, using data URL');
-      }
-    }
-
-    // Submit to fal.ai queue
-    console.log('Submitting to fal-ai queue...');
-    const submitResp = await fetch('https://queue.fal.run/fal-ai/image-apps-v2/product-photography', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Key ${FAL_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        product_image_url: productImageUrl,
-        background_color: bg_color === 'grey' ? 'grey' : 'white',
+        model: 'google/gemini-2.5-flash-image',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: PROMPT },
+              {
+                type: 'image_url',
+                image_url: { url: imageUrl },
+              },
+            ],
+          },
+        ],
+        modalities: ['image', 'text'],
       }),
     });
 
-    if (!submitResp.ok) {
-      const errText = await submitResp.text();
-      console.error('Submit error:', submitResp.status, errText);
-      throw new Error(`fal.ai submit failed [${submitResp.status}]: ${errText}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('AI Gateway error:', response.status, errText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again in a moment.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ success: false, error: 'AI credits exhausted. Please add credits to continue.' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`AI Gateway error [${response.status}]: ${errText}`);
     }
 
-    const { request_id } = await submitResp.json();
-    console.log('Request submitted, ID:', request_id);
+    const data = await response.json();
+    console.log('AI response received, checking for image...');
 
-    // Return immediately with request_id
-    return new Response(JSON.stringify({ success: true, request_id }), {
+    // Extract the generated image from the response
+    const outputImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!outputImage) {
+      console.error('Response structure:', JSON.stringify(data).slice(0, 1000));
+      throw new Error('No image returned from AI model');
+    }
+
+    console.log('Image generated successfully');
+
+    return new Response(JSON.stringify({ success: true, output_url: outputImage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

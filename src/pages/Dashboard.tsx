@@ -55,53 +55,16 @@ const Dashboard = () => {
     }
     setProcessing(true);
     try {
-      // Step 1: Submit the job
       const { data, error } = await supabase.functions.invoke('process-image', {
-        body: {
-          image_base64: uploadedImage,
-          style,
-          bg_color: bgColor,
-        },
+        body: { image_base64: uploadedImage },
       });
 
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Submit failed');
+      if (!data?.success) throw new Error(data?.error || 'Processing failed');
 
-      const requestId = data.request_id;
-      if (!requestId) throw new Error('No request_id returned');
-
-      // Step 2: Poll for completion from client side
-      const maxWait = 300000; // 5 minutes
-      const pollInterval = 3000;
-      const start = Date.now();
-
-      while (Date.now() - start < maxWait) {
-        await new Promise((r) => setTimeout(r, pollInterval));
-
-        const { data: statusData, error: statusError } = await supabase.functions.invoke('process-image', {
-          body: { action: 'check-status', request_id: requestId },
-        });
-
-        if (statusError) {
-          console.warn('Status check error, retrying...', statusError);
-          continue;
-        }
-
-        if (statusData?.status === 'COMPLETED') {
-          setProcessedImage(statusData.output_url);
-          setUsedImages((prev) => prev + 1);
-          toast.success("Image processed successfully!");
-          return;
-        }
-
-        if (statusData?.status === 'FAILED') {
-          throw new Error(statusData?.error || 'Processing failed');
-        }
-
-        // Still in progress, continue polling
-      }
-
-      throw new Error('Processing timed out. Please try again.');
+      setProcessedImage(data.output_url);
+      setUsedImages((prev) => prev + 1);
+      toast.success("Image processed successfully!");
     } catch (err: any) {
       console.error('Processing error:', err);
       toast.error(err.message || "Failed to process image. Please try again.");
