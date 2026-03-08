@@ -149,6 +149,14 @@ const Dashboard = () => {
     }
   })();
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary">
       {/* Header */}
