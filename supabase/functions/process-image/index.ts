@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const REMOVE_BG_API_KEY = Deno.env.get('REMOVE_BG_API_KEY');
-    if (!REMOVE_BG_API_KEY) {
-      throw new Error('REMOVE_BG_API_KEY is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const { image_base64, bg_color } = await req.json();
@@ -22,47 +22,60 @@ serve(async (req) => {
       throw new Error('No image provided');
     }
 
-    // Strip data URL prefix if present
-    const base64Data = image_base64.replace(/^data:image\/\w+;base64,/, '');
-
-    const formData = new FormData();
-    // Convert base64 to blob
-    const binaryString = atob(base64Data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    // Ensure proper data URL format
+    let imageUrl = image_base64;
+    if (!imageUrl.startsWith('data:')) {
+      imageUrl = `data:image/png;base64,${imageUrl}`;
     }
-    const blob = new Blob([bytes], { type: 'image/png' });
-    formData.append('image_file', blob, 'image.png');
-    formData.append('size', 'auto');
 
-    // Set background color
-    if (bg_color === 'white') {
-      formData.append('bg_color', 'FFFFFF');
-    } else if (bg_color === 'grey') {
-      formData.append('bg_color', 'E5E5E5');
-    }
-    // transparent = no bg_color param (default)
+    const bgDescription = bg_color === 'grey' ? 'a neutral grey studio background' : 'a clean white studio background';
 
-    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+    const prompt = `Take this clothing item and generate a professional fashion photo showing it worn by an invisible ghost mannequin floating in the air. The clothing should look naturally worn with 3D shape, on ${bgDescription}. Professional e-commerce style. Keep the clothing details, colors, and textures exactly as shown in the original image.`;
+
+    console.log('Calling Lovable AI Gateway for image generation...');
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'X-Api-Key': REMOVE_BG_API_KEY,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: imageUrl } },
+            ],
+          },
+        ],
+        modalities: ['image', 'text'],
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Remove.bg API failed [${response.status}]: ${errorText}`);
+      console.error('AI Gateway error:', response.status, errorText);
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      if (response.status === 402) {
+        throw new Error('AI credits exhausted. Please add credits in your Lovable workspace settings.');
+      }
+      throw new Error(`AI Gateway failed [${response.status}]: ${errorText}`);
     }
 
-    // Response is the image binary
-    const imageBuffer = await response.arrayBuffer();
-    const resultBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-    const resultDataUrl = `data:image/png;base64,${resultBase64}`;
+    const data = await response.json();
+    const generatedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    return new Response(JSON.stringify({ success: true, output_url: resultDataUrl }), {
+    if (!generatedImage) {
+      console.error('Unexpected response structure:', JSON.stringify(data).slice(0, 500));
+      throw new Error('No image was generated. Please try again.');
+    }
+
+    return new Response(JSON.stringify({ success: true, output_url: generatedImage }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
