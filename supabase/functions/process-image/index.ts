@@ -5,27 +5,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const PROMPT = `You are an expert fashion photo editor. 
+const PROMPT = `Edit this image: Remove the background completely. 
 
-I will give you a flat or mannequin clothing photo.
+Keep only the clothing items. 
 
-Your task:
+Make the clothes appear as if worn by an invisible ghost mannequin - 
 
-1. Remove the background - make it pure white
+give them a 3D inflated natural shape as if a body is inside them.
 
-2. Make the clothing look like it is worn by an invisible ghost body
+The jacket should be open and full, pants should have leg shape.
 
-3. Give the fabric natural 3D shape and realistic folds
+Float them slightly in the air.
 
-4. The clothing should float slightly above ground
+Add professional studio lighting with soft shadows below.
 
-5. Add soft professional shadow beneath
+Pure white background.
 
-6. Studio lighting, high-end e-commerce style
-
-7. Keep exact same colors, logo, patterns from original
-
-8. Final result: pure white background, floating clothes, invisible body inside`;
+Result must look like a professional e-commerce product photo.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
