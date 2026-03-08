@@ -16,7 +16,62 @@ serve(async (req) => {
       throw new Error('FAL_API_KEY is not configured');
     }
 
-    const { image_base64, bg_color } = await req.json();
+    const body = await req.json();
+    const { action } = body;
+
+    // ACTION: check-status — single poll for a given request_id
+    if (action === 'check-status') {
+      const { request_id } = body;
+      if (!request_id) throw new Error('Missing request_id');
+
+      const statusResp = await fetch(
+        `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}/status`,
+        { method: 'GET', headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
+      );
+
+      if (!statusResp.ok) {
+        const errText = await statusResp.text();
+        throw new Error(`Status check failed [${statusResp.status}]: ${errText}`);
+      }
+
+      const status = await statusResp.json();
+      console.log('Status check:', status.status);
+
+      if (status.status === 'COMPLETED') {
+        // Fetch result
+        const resultResp = await fetch(
+          `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}`,
+          { method: 'GET', headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
+        );
+        if (!resultResp.ok) throw new Error('Failed to fetch result');
+        const result = await resultResp.json();
+        console.log('Result keys:', Object.keys(result));
+
+        const outputUrl = result.image?.url || result.images?.[0]?.url || result.output?.url || result.url;
+        if (!outputUrl) {
+          console.error('Result structure:', JSON.stringify(result).slice(0, 500));
+          throw new Error('No output image found in response');
+        }
+
+        return new Response(JSON.stringify({ status: 'COMPLETED', output_url: outputUrl }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (status.status === 'FAILED') {
+        return new Response(JSON.stringify({ status: 'FAILED', error: status.error || 'Processing failed' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Still processing
+      return new Response(JSON.stringify({ status: status.status || 'IN_PROGRESS' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ACTION: submit (default) — upload image and submit to queue
+    const { image_base64, bg_color } = body;
     if (!image_base64) throw new Error('No image provided');
 
     let imageUrl = image_base64;
@@ -27,8 +82,7 @@ serve(async (req) => {
     // Upload image to fal.ai storage
     console.log('Uploading image to fal.ai storage...');
     const imageBlob = await (await fetch(imageUrl)).blob();
-
-    // Try REST upload endpoint
+    
     const uploadResp = await fetch('https://fal.ai/api/cdn/upload', {
       method: 'PUT',
       headers: {
@@ -44,14 +98,27 @@ serve(async (req) => {
       productImageUrl = uploadData.access_url || uploadData.url || imageUrl;
       console.log('Image uploaded:', productImageUrl);
     } else {
-      const uploadErr = await uploadResp.text();
-      console.log('CDN upload response:', uploadResp.status, uploadErr);
-      console.log('Using data URL directly');
+      console.log('CDN upload failed, trying multipart...');
+      // Fallback: try multipart upload
+      const form = new FormData();
+      form.append('file', imageBlob, 'clothing.png');
+      const upload2 = await fetch('https://fal.ai/api/cdn/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Key ${FAL_API_KEY}` },
+        body: form,
+      });
+      if (upload2.ok) {
+        const d = await upload2.json();
+        productImageUrl = d.access_url || d.url || imageUrl;
+        console.log('Multipart upload succeeded:', productImageUrl);
+      } else {
+        console.log('All uploads failed, using data URL');
+      }
     }
 
-    // Call fal.ai synchronously (blocking call, returns when done)
-    console.log('Calling fal-ai/image-apps-v2/product-photography synchronously...');
-    const result = await fetch('https://fal.run/fal-ai/image-apps-v2/product-photography', {
+    // Submit to fal.ai queue
+    console.log('Submitting to fal-ai queue...');
+    const submitResp = await fetch('https://queue.fal.run/fal-ai/image-apps-v2/product-photography', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_API_KEY}`,
@@ -63,22 +130,17 @@ serve(async (req) => {
       }),
     });
 
-    if (!result.ok) {
-      const errText = await result.text();
-      console.error('fal.ai error:', result.status, errText);
-      throw new Error(`fal.ai failed [${result.status}]: ${errText}`);
+    if (!submitResp.ok) {
+      const errText = await submitResp.text();
+      console.error('Submit error:', submitResp.status, errText);
+      throw new Error(`fal.ai submit failed [${submitResp.status}]: ${errText}`);
     }
 
-    const data = await result.json();
-    console.log('Result keys:', Object.keys(data));
+    const { request_id } = await submitResp.json();
+    console.log('Request submitted, ID:', request_id);
 
-    const outputUrl = data.image?.url || data.images?.[0]?.url || data.output?.url || data.url;
-    if (!outputUrl) {
-      console.error('Result structure:', JSON.stringify(data).slice(0, 500));
-      throw new Error('No output image found in response');
-    }
-
-    return new Response(JSON.stringify({ success: true, output_url: outputUrl }), {
+    // Return immediately with request_id
+    return new Response(JSON.stringify({ success: true, request_id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
