@@ -286,9 +286,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div
-                className={`aspect-[3/4] rounded-lg flex items-center justify-center overflow-hidden ${
-                  bgColor === "white" ? "bg-background border border-border" : bgColor === "grey" ? "bg-muted" : "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlNWU1Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU1ZTUiLz48L3N2Zz4=')]"
-                }`}
+                className={`aspect-[3/4] rounded-lg flex items-center justify-center overflow-hidden ${resultBgClass}`}
               >
                 {processing ? (
                   <div className="flex flex-col items-center gap-3 text-primary">
