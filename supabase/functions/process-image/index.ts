@@ -50,8 +50,8 @@ serve(async (req) => {
     }
 
     // Step 2: Submit to fal.ai queue
-    console.log('Submitting to fal-ai/fashion-product-photos...');
-    const submitResp = await fetch('https://queue.fal.run/fal-ai/fashion-product-photos', {
+    console.log('Submitting to fal-ai/image-apps-v2/product-photography...');
+    const submitResp = await fetch('https://queue.fal.run/fal-ai/image-apps-v2/product-photography', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_API_KEY}`,
@@ -81,7 +81,7 @@ serve(async (req) => {
       await new Promise(r => setTimeout(r, pollInterval));
 
       const statusResp = await fetch(
-        `https://queue.fal.run/fal-ai/fashion-product-photos/requests/${request_id}/status`,
+        `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}/status`,
         { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
       );
 
@@ -92,7 +92,7 @@ serve(async (req) => {
       if (status.status === 'COMPLETED') {
         // Fetch result
         const resultResp = await fetch(
-          `https://queue.fal.run/fal-ai/fashion-product-photos/requests/${request_id}`,
+          `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}`,
           { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
         );
 
