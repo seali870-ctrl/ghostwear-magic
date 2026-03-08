@@ -48,19 +48,33 @@ const Dashboard = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     if (!uploadedImage) {
       toast.error("Please upload an image first");
       return;
     }
     setProcessing(true);
-    // Simulate processing
-    setTimeout(() => {
-      setProcessedImage(uploadedImage);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-image', {
+        body: {
+          image_base64: uploadedImage,
+          style,
+          bg_color: bgColor,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Processing failed');
+
+      setProcessedImage(data.output_url);
       setUsedImages((prev) => prev + 1);
-      setProcessing(false);
       toast.success("Image processed successfully!");
-    }, 2500);
+    } catch (err: any) {
+      console.error('Processing error:', err);
+      toast.error(err.message || "Failed to process image. Please try again.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleDownload = () => {
