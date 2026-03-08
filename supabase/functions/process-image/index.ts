@@ -5,25 +5,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const BASE_PROMPT = `You are a professional fashion photographer. 
+const BASE_PROMPT = `Edit this exact clothing image. Do the following steps:
 
-Take this exact clothing item and create a stunning 
+1. Keep the EXACT same clothing from the uploaded image - same colors, same patterns
 
-studio fashion photo. The clothing should appear worn 
+2. Make the clothing appear worn by an invisible human body - natural body shape inside, proper shoulder width, chest, waist
 
-by a completely invisible body - no mannequin, no person visible at all.
+3. The clothing must look INFLATED and 3D - not flat
 
-The garment should float naturally in the air as if worn,
+4. Person-like pose: standing straight, arms slightly away from body
 
-with realistic fabric folds and 3D shape.
+5. The clothing should be the HERO of the image - large, centered, clear, filling at least 60% of the image frame
 
-Style: High-end fashion editorial, dramatic studio lighting,
+6. Professional fashion editorial lighting
 
-clean gradient background (white to light grey).
-
-The result should look like a $10,000 professional photoshoot.
-
-Maintain exact colors, patterns and details of the original clothing.`;
+7. The result should look like a real model is wearing it but the body is invisible`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
