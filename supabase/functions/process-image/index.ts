@@ -26,7 +26,7 @@ serve(async (req) => {
 
       const statusResp = await fetch(
         `https://queue.fal.run/fal-ai/image-apps-v2/product-photography/requests/${request_id}/status`,
-        { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
+        { method: 'GET', headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
       );
 
       if (!statusResp.ok) {
