@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
+    if (!FAL_API_KEY) {
+      throw new Error('FAL_API_KEY is not configured');
     }
 
     const { image_base64, bg_color } = await req.json();
@@ -28,57 +28,101 @@ serve(async (req) => {
       imageUrl = `data:image/png;base64,${imageUrl}`;
     }
 
-    
+    // Step 1: Upload image to fal.ai storage
+    console.log('Uploading image to fal.ai storage...');
+    const imageBlob = await (await fetch(imageUrl)).blob();
+    const uploadForm = new FormData();
+    uploadForm.append('file', imageBlob, 'clothing.png');
 
-    const prompt = `Take this clothing item and generate a professional fashion photo showing it worn by an invisible ghost mannequin floating in the air. The clothing should look naturally worn with 3D shape, on a clean ${bg_color === 'grey' ? 'grey studio' : 'white/studio'} background. Professional e-commerce style.`;
+    const uploadResp = await fetch('https://fal.run/fal-ai/file-upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Key ${FAL_API_KEY}` },
+      body: uploadForm,
+    });
 
-    console.log('Calling Lovable AI Gateway for image generation...');
+    let productImageUrl = imageUrl;
+    if (uploadResp.ok) {
+      const uploadData = await uploadResp.json();
+      productImageUrl = uploadData.url || imageUrl;
+      console.log('Image uploaded to fal storage:', productImageUrl);
+    } else {
+      console.log('File upload failed, using data URL directly');
+    }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Step 2: Submit to fal.ai queue
+    console.log('Submitting to fal-ai/fashion-product-photos...');
+    const submitResp = await fetch('https://queue.fal.run/fal-ai/fashion-product-photos', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Key ${FAL_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-pro-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: imageUrl } },
-            ],
-          },
-        ],
-        modalities: ['image', 'text'],
+        product_image_url: productImageUrl,
+        background_color: bg_color === 'grey' ? 'grey' : 'white',
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again in a moment.');
-      }
-      if (response.status === 402) {
-        throw new Error('AI credits exhausted. Please add credits in your Lovable workspace settings.');
-      }
-      throw new Error(`AI Gateway failed [${response.status}]: ${errorText}`);
+    if (!submitResp.ok) {
+      const errText = await submitResp.text();
+      console.error('fal.ai submit error:', submitResp.status, errText);
+      throw new Error(`fal.ai submit failed [${submitResp.status}]: ${errText}`);
     }
 
-    const data = await response.json();
-    const generatedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const { request_id } = await submitResp.json();
+    console.log('Request submitted, ID:', request_id);
 
-    if (!generatedImage) {
-      console.error('Unexpected response structure:', JSON.stringify(data).slice(0, 500));
-      throw new Error('No image was generated. Please try again.');
+    // Step 3: Poll for completion
+    const maxWait = 120000; // 2 minutes
+    const pollInterval = 2000;
+    const start = Date.now();
+
+    while (Date.now() - start < maxWait) {
+      await new Promise(r => setTimeout(r, pollInterval));
+
+      const statusResp = await fetch(
+        `https://queue.fal.run/fal-ai/fashion-product-photos/requests/${request_id}/status`,
+        { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
+      );
+
+      if (!statusResp.ok) continue;
+      const status = await statusResp.json();
+      console.log('Status:', status.status);
+
+      if (status.status === 'COMPLETED') {
+        // Fetch result
+        const resultResp = await fetch(
+          `https://queue.fal.run/fal-ai/fashion-product-photos/requests/${request_id}`,
+          { headers: { 'Authorization': `Key ${FAL_API_KEY}` } }
+        );
+
+        if (!resultResp.ok) {
+          throw new Error('Failed to fetch result from fal.ai');
+        }
+
+        const result = await resultResp.json();
+        console.log('Result keys:', Object.keys(result));
+
+        // Extract output image URL - check common fal.ai response structures
+        const outputUrl = result.image?.url || result.images?.[0]?.url || result.output?.url || result.url;
+
+        if (!outputUrl) {
+          console.error('Unexpected result structure:', JSON.stringify(result).slice(0, 500));
+          throw new Error('No output image found in fal.ai response');
+        }
+
+        return new Response(JSON.stringify({ success: true, output_url: outputUrl }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (status.status === 'FAILED') {
+        throw new Error('fal.ai processing failed: ' + (status.error || 'Unknown error'));
+      }
     }
 
-    return new Response(JSON.stringify({ success: true, output_url: generatedImage }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    throw new Error('Processing timed out after 2 minutes');
 
   } catch (error: unknown) {
     console.error('Error processing image:', error);
