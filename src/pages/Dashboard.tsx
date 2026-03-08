@@ -17,7 +17,59 @@ import {
 } from "lucide-react";
 
 type Style = "ghost" | "floating" | "flatlay";
-type BgColor = "white" | "grey" | "transparent";
+
+type BgStyle = "white-studio" | "grey-studio" | "transparent" | "sunny-studio" | "cool-studio" | "beach" | "forest" | "autumn";
+
+const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: string }[] = [
+  {
+    key: "white-studio",
+    label: "White Studio",
+    preview: "bg-white border border-border",
+    description: "Pure white studio background with clean professional lighting.",
+  },
+  {
+    key: "grey-studio",
+    label: "Grey Studio",
+    preview: "bg-[hsl(0,0%,75%)]",
+    description: "Neutral grey studio background with soft even lighting.",
+  },
+  {
+    key: "transparent",
+    label: "Transparent",
+    preview: "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlNWU1Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU1ZTUiLz48L3N2Zz4=')]",
+    description: "Transparent background with no backdrop, just the clothing on empty space.",
+  },
+  {
+    key: "sunny-studio",
+    label: "Sunny Studio",
+    preview: "bg-gradient-to-br from-[hsl(40,90%,70%)] to-[hsl(25,85%,60%)]",
+    description: "Warm golden hour studio setting with soft orange and yellow gradient lighting, giving a luxurious warm glow.",
+  },
+  {
+    key: "cool-studio",
+    label: "Cool Studio",
+    preview: "bg-gradient-to-br from-[hsl(210,60%,85%)] to-[hsl(220,50%,75%)]",
+    description: "Cool blue-white professional studio with crisp cold lighting, modern and sleek feel.",
+  },
+  {
+    key: "beach",
+    label: "Beach",
+    preview: "bg-gradient-to-b from-[hsl(185,70%,60%)] to-[hsl(45,80%,85%)]",
+    description: "Tropical beach scene with turquoise water and white sand in the background, bright sunny day.",
+  },
+  {
+    key: "forest",
+    label: "Forest",
+    preview: "bg-gradient-to-b from-[hsl(120,40%,35%)] to-[hsl(100,35%,55%)]",
+    description: "Lush green forest with soft bokeh trees and dappled sunlight filtering through leaves.",
+  },
+  {
+    key: "autumn",
+    label: "Autumn",
+    preview: "bg-gradient-to-br from-[hsl(25,80%,55%)] to-[hsl(45,70%,50%)]",
+    description: "Autumn park with orange and red falling leaves, warm golden light, cozy seasonal atmosphere.",
+  },
+];
 
 const Dashboard = () => {
   const { t, language, setLanguage } = useLanguage();
@@ -28,7 +80,7 @@ const Dashboard = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [style, setStyle] = useState<Style>("ghost");
-  const [bgColor, setBgColor] = useState<BgColor>("white");
+  const [bgStyle, setBgStyle] = useState<BgStyle>("white-studio");
   const [processing, setProcessing] = useState(false);
   const [usedImages, setUsedImages] = useState(7);
   const totalImages = 20;
@@ -55,8 +107,9 @@ const Dashboard = () => {
     }
     setProcessing(true);
     try {
+      const selectedBg = BG_OPTIONS.find((b) => b.key === bgStyle);
       const { data, error } = await supabase.functions.invoke('process-image', {
-        body: { image_base64: uploadedImage },
+        body: { image_base64: uploadedImage, background: selectedBg?.description || "" },
       });
 
       if (error) throw error;
@@ -87,11 +140,14 @@ const Dashboard = () => {
     { key: "flatlay", icon: "📐" },
   ];
 
-  const bgColors: { key: BgColor; color: string; border?: boolean }[] = [
-    { key: "white", color: "bg-background border border-border" },
-    { key: "grey", color: "bg-muted" },
-    { key: "transparent", color: "bg-background border border-dashed border-border" },
-  ];
+  const resultBgClass = (() => {
+    switch (bgStyle) {
+      case "white-studio": return "bg-background border border-border";
+      case "grey-studio": return "bg-muted";
+      case "transparent": return "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlNWU1Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU1ZTUiLz48L3N2Zz4=')]";
+      default: return "bg-muted";
+    }
+  })();
 
   if (authLoading) {
     return (
@@ -182,17 +238,17 @@ const Dashboard = () => {
             {/* Background */}
             <div className="card-elevated p-6">
               <h3 className="font-display font-semibold text-foreground mb-4">{t("dashboard.background")}</h3>
-              <div className="flex gap-3">
-                {bgColors.map((bg) => (
+              <div className="grid grid-cols-4 gap-2">
+                {BG_OPTIONS.map((bg) => (
                   <button
                     key={bg.key}
-                    onClick={() => setBgColor(bg.key)}
-                    className={`flex flex-col items-center gap-2 flex-1 p-3 rounded-lg transition-all border ${
-                      bgColor === bg.key ? "border-primary ring-2 ring-primary/20" : "border-border"
+                    onClick={() => setBgStyle(bg.key)}
+                    className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all border ${
+                      bgStyle === bg.key ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full ${bg.color}`} />
-                    <span className="text-xs font-medium">{t(`dashboard.${bg.key}`)}</span>
+                    <div className={`w-8 h-8 rounded-md ${bg.preview}`} />
+                    <span className="text-[10px] font-medium leading-tight text-center">{bg.label}</span>
                   </button>
                 ))}
               </div>
@@ -238,9 +294,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div
-                className={`aspect-[3/4] rounded-lg flex items-center justify-center overflow-hidden ${
-                  bgColor === "white" ? "bg-background border border-border" : bgColor === "grey" ? "bg-muted" : "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlNWU1Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU1ZTUiLz48L3N2Zz4=')]"
-                }`}
+                className={`aspect-[3/4] rounded-lg flex items-center justify-center overflow-hidden ${resultBgClass}`}
               >
                 {processing ? (
                   <div className="flex flex-col items-center gap-3 text-primary">

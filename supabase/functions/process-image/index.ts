@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const PROMPT = `Edit this image: Remove the background completely. 
+const BASE_PROMPT = `Edit this image: Remove the background completely. 
 
 Keep only the clothing items. 
 
@@ -18,8 +18,6 @@ The jacket should be open and full, pants should have leg shape.
 Float them slightly in the air.
 
 Add professional studio lighting with soft shadows below.
-
-Pure white background.
 
 Result must look like a professional e-commerce product photo.`;
 
@@ -34,8 +32,15 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const { image_base64 } = await req.json();
+    const { image_base64, background } = await req.json();
     if (!image_base64) throw new Error('No image provided');
+
+    let finalPrompt = BASE_PROMPT;
+    if (background) {
+      finalPrompt += `\n\nPlace the floating ghost mannequin clothing in this setting: ${background}. Keep the clothing as the main focus, background should be artistic but not distracting.`;
+    } else {
+      finalPrompt += `\n\nPure white background.`;
+    }
 
     // Ensure it's a proper data URL
     let imageUrl = image_base64;
@@ -57,7 +62,7 @@ serve(async (req) => {
           {
             role: 'user',
             content: [
-              { type: 'text', text: PROMPT },
+              { type: 'text', text: finalPrompt },
               {
                 type: 'image_url',
                 image_url: { url: imageUrl },
