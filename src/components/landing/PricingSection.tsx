@@ -27,9 +27,18 @@ const plans = [
     key: "pro",
     name: null,
     price: 29,
-    images: -1,
+    images: 100,
     features: ["feature1", "feature2", "feature3", "feature4", "feature5"],
     popular: true,
+    subtitle: "Per month",
+  },
+  {
+    key: "business",
+    name: null,
+    price: 59,
+    images: -1,
+    features: ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"],
+    popular: false,
     subtitle: "Per month",
   },
 ];
@@ -52,7 +61,7 @@ const PricingSection = () => {
           {t("hero.subtitle").slice(0, 60)}...
         </p>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.key}
