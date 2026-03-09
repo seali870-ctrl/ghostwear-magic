@@ -15,9 +15,9 @@ import {
 const WHATSAPP_LINK = "https://wa.me/201040535481";
 
 const plans = [
-  { name: "Starter", price: "$9", period: "/mo", images: "50 images/month" },
-  { name: "Pro", price: "$29", period: "/mo", images: "200 images/month", popular: true },
-  { name: "Business", price: "$79", period: "/mo", images: "Unlimited images" },
+  { name: "Starter", price: "$9", period: "/mo", images: "30 images/month", whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249" },
+  { name: "Pro", price: "$29", period: "/mo", images: "100 images/month", popular: true, whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2429" },
+  { name: "Business", price: "$20", originalPrice: "$59", period: "/mo", images: "Unlimited images", whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Business", badge: "🔥 الشهر الأول فقط", note: "يتجدد بـ $59/شهر بعد ذلك" },
 ];
 
 const paymentMethods = [
@@ -100,9 +100,12 @@ const Payment = () => {
 
         <div className="grid sm:grid-cols-3 gap-4 mb-12">
           {plans.map((plan) => (
-            <div
+            <a
               key={plan.name}
-              className={`card-elevated p-5 text-center relative ${
+              href={plan.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`card-elevated p-5 text-center relative block hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer ${
                 plan.popular ? "ring-2 ring-primary" : ""
               }`}
             >
@@ -111,13 +114,24 @@ const Payment = () => {
                   Most Popular
                 </span>
               )}
+              {"badge" in plan && plan.badge && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                  {plan.badge}
+                </span>
+              )}
               <h3 className="font-display font-bold text-lg text-foreground">{plan.name}</h3>
               <div className="mt-2">
+                {"originalPrice" in plan && plan.originalPrice && (
+                  <span className="text-muted-foreground text-sm line-through mr-1">{plan.originalPrice}</span>
+                )}
                 <span className="text-3xl font-bold text-foreground">{plan.price}</span>
                 <span className="text-muted-foreground text-sm">{plan.period}</span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">{plan.images}</p>
-            </div>
+              {"note" in plan && plan.note && (
+                <p className="text-xs text-orange-500 font-medium mt-1">{plan.note}</p>
+              )}
+            </a>
           ))}
         </div>
 
