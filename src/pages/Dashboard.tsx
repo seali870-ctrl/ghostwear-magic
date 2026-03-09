@@ -22,6 +22,8 @@ import {
 
 const ADMIN_EMAIL = "seali870@gmail.com";
 
+type Style = "ghost" | "floating" | "flatlay";
+
 type BgStyle = "white-studio" | "grey-studio" | "transparent" | "sunny-studio" | "cool-studio" | "beach" | "forest" | "autumn";
 
 const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: string; premium: boolean }[] = [
