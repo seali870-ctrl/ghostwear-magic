@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const FREE_TRIAL_LIMIT = 5;
+const ADMIN_EMAIL = 'seali870@gmail.com';
 
 const BASE_PROMPT = `Edit this exact clothing image. Do the following steps:
 
