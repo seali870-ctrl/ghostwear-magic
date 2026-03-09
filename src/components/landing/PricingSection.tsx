@@ -22,7 +22,7 @@ const plans = [
     features: ["feature1", "feature2", "feature3", "feature4"],
     popular: false,
     subtitle: "Per month",
-    whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249",
   },
   {
     key: "pro",
@@ -32,7 +32,7 @@ const plans = [
     features: ["feature1", "feature2", "feature3", "feature4", "feature5"],
     popular: true,
     subtitle: "Per month",
-    whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2429",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2429",
   },
   {
     key: "business",
@@ -43,7 +43,7 @@ const plans = [
     features: ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"],
     popular: false,
     subtitle: "Per month",
-    whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Business",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business",
     badge: "🔥 الشهر الأول فقط",
     note: "يتجدد بـ $59/شهر بعد ذلك",
   },
