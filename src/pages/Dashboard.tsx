@@ -17,6 +17,7 @@ import {
   Sparkles,
   AlertCircle,
   Crown,
+  Shield,
 } from "lucide-react";
 
 type Style = "ghost" | "floating" | "flatlay";
