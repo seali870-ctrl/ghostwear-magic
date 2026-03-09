@@ -18,10 +18,12 @@ const ADMIN_EMAIL = "seali870@gmail.com";
 
 const PLAN_CONFIG: Record<string, { images_limit: number; label: string }> = {
   free_trial: { images_limit: 5, label: "Free Trial" },
-  starter: { images_limit: 30, label: "Starter" },
-  pro: { images_limit: 100, label: "Pro" },
+  starter: { images_limit: 30, label: "Starter (30 images)" },
+  pro: { images_limit: 100, label: "Pro (100 images)" },
   business: { images_limit: -1, label: "Business (Unlimited)" },
 };
+
+const GRANT_PLANS = ["starter", "pro", "business"] as const;
 
 interface UserData {
   id: string;
