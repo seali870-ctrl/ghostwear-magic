@@ -17,6 +17,7 @@ import {
   Sparkles,
   AlertCircle,
   Crown,
+  Shield,
 } from "lucide-react";
 
 type Style = "ghost" | "floating" | "flatlay";
@@ -232,6 +233,12 @@ const Dashboard = () => {
             Ghost<span className="text-gradient">Wear</span>
           </h1>
           <div className="flex items-center gap-3">
+            {user?.email === 'seali870@gmail.com' && (
+              <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
+                <Shield className="w-4 h-4 mr-1" />
+                Admin
+              </Button>
+            )}
             <button
               onClick={() => setLanguage(language === "en" ? "ar" : "en")}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground transition-colors"
