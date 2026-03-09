@@ -23,57 +23,64 @@ type Style = "ghost" | "floating" | "flatlay";
 
 type BgStyle = "white-studio" | "grey-studio" | "transparent" | "sunny-studio" | "cool-studio" | "beach" | "forest" | "autumn";
 
-const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: string }[] = [
+const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: string; premium: boolean }[] = [
   {
     key: "white-studio",
     label: "White Studio",
     preview: "bg-white border border-border",
     description: "Pure white studio background with clean professional lighting.",
+    premium: false,
   },
   {
     key: "grey-studio",
     label: "Grey Studio",
     preview: "bg-[hsl(0,0%,75%)]",
     description: "Neutral grey studio background with soft even lighting.",
+    premium: false,
   },
   {
     key: "transparent",
     label: "Transparent",
     preview: "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlNWU1Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU1ZTUiLz48L3N2Zz4=')]",
     description: "Transparent background with no backdrop, just the clothing on empty space.",
+    premium: true,
   },
   {
     key: "sunny-studio",
     label: "Sunny Studio",
     preview: "bg-gradient-to-br from-[hsl(40,90%,70%)] to-[hsl(25,85%,60%)]",
     description: "Warm golden hour studio setting with soft orange and yellow gradient lighting, giving a luxurious warm glow.",
+    premium: true,
   },
   {
     key: "cool-studio",
     label: "Cool Studio",
     preview: "bg-gradient-to-br from-[hsl(210,60%,85%)] to-[hsl(220,50%,75%)]",
     description: "Cool blue-white professional studio with crisp cold lighting, modern and sleek feel.",
+    premium: true,
   },
   {
     key: "beach",
     label: "Beach",
     preview: "bg-gradient-to-b from-[hsl(185,70%,60%)] to-[hsl(45,80%,85%)]",
     description: "Tropical beach scene with turquoise water and white sand in the background, bright sunny day.",
+    premium: true,
   },
   {
     key: "forest",
     label: "Forest",
     preview: "bg-gradient-to-b from-[hsl(120,40%,35%)] to-[hsl(100,35%,55%)]",
     description: "Lush green forest with soft bokeh trees and dappled sunlight filtering through leaves.",
+    premium: true,
   },
   {
     key: "autumn",
     label: "Autumn",
     preview: "bg-gradient-to-br from-[hsl(25,80%,55%)] to-[hsl(45,70%,50%)]",
     description: "Autumn park with orange and red falling leaves, warm golden light, cozy seasonal atmosphere.",
+    premium: true,
   },
 ];
-
 const FREE_TRIAL_LIMIT = 5;
 
 const Dashboard = () => {
@@ -343,18 +350,36 @@ const Dashboard = () => {
             <div className="card-elevated p-6">
               <h3 className="font-display font-semibold text-foreground mb-4">{t("dashboard.background")}</h3>
               <div className="grid grid-cols-4 gap-2">
-                {BG_OPTIONS.map((bg) => (
-                  <button
-                    key={bg.key}
-                    onClick={() => setBgStyle(bg.key)}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all border ${
-                      bgStyle === bg.key ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-md ${bg.preview}`} />
-                    <span className="text-[10px] font-medium leading-tight text-center">{bg.label}</span>
-                  </button>
-                ))}
+                {BG_OPTIONS.map((bg) => {
+                  const isFreeTrial = userProfile?.plan_type === 'free_trial';
+                  const isLocked = isFreeTrial && bg.premium;
+                  
+                  return (
+                    <button
+                      key={bg.key}
+                      onClick={() => {
+                        if (isLocked) {
+                          setShowUpgradePrompt(true);
+                        } else {
+                          setBgStyle(bg.key);
+                        }
+                      }}
+                      className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all border relative ${
+                        bgStyle === bg.key && !isLocked
+                          ? "border-primary ring-2 ring-primary/20"
+                          : isLocked
+                          ? "border-border opacity-60 cursor-not-allowed"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-md ${bg.preview}`} />
+                      <span className="text-[10px] font-medium leading-tight text-center flex items-center gap-0.5">
+                        {isLocked && <span className="text-[8px]">🔒</span>}
+                        {bg.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
