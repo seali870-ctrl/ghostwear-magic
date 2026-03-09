@@ -148,11 +148,12 @@ const Dashboard = () => {
     reader.readAsDataURL(file);
   };
 
-  const canProcess = userProfile && !(
+  const isAdmin = user?.email === ADMIN_EMAIL;
+  const canProcess = isAdmin || (userProfile && !(
     userProfile.plan_type === 'free_trial' && userProfile.images_used >= FREE_TRIAL_LIMIT
   ) && !(
     userProfile.images_limit !== -1 && userProfile.images_used >= userProfile.images_limit
-  );
+  ));
 
   const handleProcess = async () => {
     if (!uploadedImage) {
