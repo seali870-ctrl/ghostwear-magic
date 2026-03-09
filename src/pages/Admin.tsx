@@ -150,20 +150,32 @@ const Admin = () => {
         <div className="card-elevated p-6">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-lg font-bold text-foreground">Grant Unlimited Access</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">Grant Plan Access</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Enter a user's email to give them unlimited free access (Business plan).
+            Enter a user's email and select a plan to grant them free access.
           </p>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <Input
               placeholder="user@example.com"
               value={grantEmail}
               onChange={(e) => setGrantEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGrantUnlimited()}
+              onKeyDown={(e) => e.key === "Enter" && handleGrantAccess()}
               className="max-w-sm"
             />
-            <Button onClick={handleGrantUnlimited} disabled={granting || !grantEmail.trim()} className="btn-gradient">
+            <Select value={grantPlan} onValueChange={setGrantPlan}>
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GRANT_PLANS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {PLAN_CONFIG[key].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleGrantAccess} disabled={granting || !grantEmail.trim()} className="btn-gradient">
               {granting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crown className="w-4 h-4 mr-1" />}
               Grant Access
             </Button>
