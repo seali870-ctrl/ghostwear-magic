@@ -18,10 +18,12 @@ const ADMIN_EMAIL = "seali870@gmail.com";
 
 const PLAN_CONFIG: Record<string, { images_limit: number; label: string }> = {
   free_trial: { images_limit: 5, label: "Free Trial" },
-  starter: { images_limit: 30, label: "Starter" },
-  pro: { images_limit: 100, label: "Pro" },
+  starter: { images_limit: 30, label: "Starter (30 images)" },
+  pro: { images_limit: 100, label: "Pro (100 images)" },
   business: { images_limit: -1, label: "Business (Unlimited)" },
 };
+
+const GRANT_PLANS = ["starter", "pro", "business"] as const;
 
 interface UserData {
   id: string;
@@ -40,6 +42,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [grantEmail, setGrantEmail] = useState("");
+  const [grantPlan, setGrantPlan] = useState<string>("business");
   const [granting, setGranting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -72,12 +75,19 @@ const Admin = () => {
     }
   };
 
-  const handleGrantUnlimited = async () => {
+  const handleGrantAccess = async () => {
     if (!grantEmail.trim()) return;
+    const config = PLAN_CONFIG[grantPlan];
+    if (!config) return;
     setGranting(true);
     try {
-      await adminInvoke({ action: "grant_unlimited", email: grantEmail.trim() });
-      toast.success(`Unlimited access granted to ${grantEmail}`);
+      await adminInvoke({
+        action: "grant_access",
+        email: grantEmail.trim(),
+        plan_type: grantPlan,
+        images_limit: config.images_limit,
+      });
+      toast.success(`${config.label} access granted to ${grantEmail}`);
       setGrantEmail("");
       fetchUsers();
     } catch (err: any) {
@@ -140,20 +150,32 @@ const Admin = () => {
         <div className="card-elevated p-6">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-lg font-bold text-foreground">Grant Unlimited Access</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">Grant Plan Access</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Enter a user's email to give them unlimited free access (Business plan).
+            Enter a user's email and select a plan to grant them free access.
           </p>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <Input
               placeholder="user@example.com"
               value={grantEmail}
               onChange={(e) => setGrantEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGrantUnlimited()}
+              onKeyDown={(e) => e.key === "Enter" && handleGrantAccess()}
               className="max-w-sm"
             />
-            <Button onClick={handleGrantUnlimited} disabled={granting || !grantEmail.trim()} className="btn-gradient">
+            <Select value={grantPlan} onValueChange={setGrantPlan}>
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GRANT_PLANS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {PLAN_CONFIG[key].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleGrantAccess} disabled={granting || !grantEmail.trim()} className="btn-gradient">
               {granting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crown className="w-4 h-4 mr-1" />}
               Grant Access
             </Button>

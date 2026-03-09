@@ -95,11 +95,10 @@ serve(async (req) => {
         return jsonResponse({ success: true });
       }
 
-      case 'grant_unlimited': {
-        const { email } = params;
-        if (!email) return jsonResponse({ error: 'email required' }, 400);
+      case 'grant_access': {
+        const { email, plan_type, images_limit } = params;
+        if (!email || !plan_type) return jsonResponse({ error: 'email and plan_type required' }, 400);
 
-        // Find user by email
         const { data: authUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
         const targetUser = authUsers?.users.find(u => u.email === email);
         if (!targetUser) {
@@ -108,7 +107,7 @@ serve(async (req) => {
 
         const { error } = await adminClient
           .from('user_profiles')
-          .update({ plan_type: 'business', images_limit: -1 })
+          .update({ plan_type, images_limit: images_limit ?? -1, images_used: 0 })
           .eq('user_id', targetUser.id);
 
         if (error) throw error;
