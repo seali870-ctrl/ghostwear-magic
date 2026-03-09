@@ -2,15 +2,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 
 // ========================================
-// 📷 REPLACE YOUR BEFORE/AFTER IMAGES HERE
+// 📷 BEFORE/AFTER EXAMPLE IMAGES
 // ========================================
-// Option 1: Import local images from src/assets/
-import beforeImg from "@/assets/before-example.jpg";
-import afterImg from "@/assets/after-example.jpg";
+import before1 from "@/assets/before-1.png";
+import after1 from "@/assets/after-1.png";
+import before2 from "@/assets/before-2.png";
+import after2 from "@/assets/after-2.png";
 
-// Option 2: Use external URLs (uncomment and replace the imports above)
-// const beforeImg = "https://your-image-url.com/before.jpg";
-// const afterImg = "https://your-image-url.com/after.jpg";
+const examples = [
+  { before: before1, after: after1 },
+  { before: before2, after: after2 },
+];
 // ========================================
 
 const BeforeAfterSection = () => {
@@ -28,36 +30,48 @@ const BeforeAfterSection = () => {
           {t("beforeafter.title")}
         </motion.h2>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="card-elevated overflow-hidden"
-          >
-            <div className="relative">
-              <img src={beforeImg} alt="Before ghost mannequin processing" className="w-full aspect-[4/5] object-cover" />
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-foreground/80 text-background text-sm font-medium">
-                {t("beforeafter.before")}
-              </span>
-            </div>
-          </motion.div>
+        <div className="space-y-16">
+          {examples.map((example, idx) => (
+            <div key={idx} className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="card-elevated overflow-hidden"
+              >
+                <div className="relative">
+                  <img 
+                    src={example.before} 
+                    alt={`Before ghost mannequin processing - example ${idx + 1}`} 
+                    className="w-full aspect-[4/5] object-cover" 
+                  />
+                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-foreground/80 text-background text-sm font-medium">
+                    {t("beforeafter.before")}
+                  </span>
+                </div>
+              </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="card-elevated overflow-hidden"
-          >
-            <div className="relative">
-              <img src={afterImg} alt="After ghost mannequin processing" className="w-full aspect-[4/5] object-cover" />
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                {t("beforeafter.after")}
-              </span>
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="card-elevated overflow-hidden"
+              >
+                <div className="relative">
+                  <img 
+                    src={example.after} 
+                    alt={`After ghost mannequin processing - example ${idx + 1}`} 
+                    className="w-full aspect-[4/5] object-cover" 
+                  />
+                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                    {t("beforeafter.after")}
+                  </span>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
+          ))}
         </div>
       </div>
     </section>
