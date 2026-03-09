@@ -65,6 +65,7 @@ serve(async (req) => {
     const isAdmin = authUser?.email === ADMIN_EMAIL;
 
     // --- Usage check (skip for admin) ---
+    let currentUsage = 0;
     if (!isAdmin) {
       const { data: profile, error: profileError } = await adminClient
         .from('user_profiles')
@@ -76,6 +77,8 @@ serve(async (req) => {
         console.error('Profile fetch error:', profileError);
         return jsonResponse({ success: false, error: 'User profile not found' }, 404);
       }
+
+      currentUsage = profile.images_used;
 
       if (profile.plan_type === 'free_trial' && profile.images_used >= FREE_TRIAL_LIMIT) {
         return jsonResponse({
@@ -142,32 +145,45 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('AI Gateway error:', response.status, errText);
+      console.error('AI Gateway error status:', response.status);
+      console.error('AI Gateway error body:', errText);
+      
+      let parsedError = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        parsedError = errJson.error?.message || errJson.message || errJson.error || errText;
+      } catch { /* use raw text */ }
+
       if (response.status === 429) {
-        return jsonResponse({ success: false, error: 'Rate limit exceeded. Please try again in a moment.' }, 429);
+        return jsonResponse({ success: false, error: `Rate limit exceeded: ${parsedError}` }, 429);
       }
       if (response.status === 402) {
-        return jsonResponse({ success: false, error: 'AI credits exhausted.' }, 402);
+        return jsonResponse({ success: false, error: `AI credits exhausted: ${parsedError}` }, 402);
       }
-      throw new Error(`AI Gateway error [${response.status}]: ${errText}`);
+      return jsonResponse({ success: false, error: `AI error (${response.status}): ${parsedError}` }, 500);
     }
 
     const data = await response.json();
+    console.log('AI response keys:', Object.keys(data));
+    console.log('AI choices structure:', JSON.stringify(data.choices?.[0]?.message).slice(0, 500));
+    
     const outputImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!outputImage) {
-      console.error('Response structure:', JSON.stringify(data).slice(0, 1000));
-      throw new Error('No image returned from AI model');
+      console.error('Full AI response:', JSON.stringify(data).slice(0, 2000));
+      return jsonResponse({ success: false, error: 'No image returned from AI model. The model may not support image generation with this input.' }, 500);
     }
 
-    // --- Increment usage AFTER successful generation ---
-    const newCount = profile.images_used + 1;
-    await adminClient
-      .from('user_profiles')
-      .update({ images_used: newCount })
-      .eq('user_id', userId);
+    // --- Increment usage AFTER successful generation (skip for admin) ---
+    let newCount = currentUsage + 1;
+    if (!isAdmin) {
+      await adminClient
+        .from('user_profiles')
+        .update({ images_used: newCount })
+        .eq('user_id', userId);
+    }
 
-    console.log(`Image generated. User ${userId} usage: ${newCount}`);
+    console.log(`Image generated. User ${userId} (admin: ${isAdmin}) usage: ${newCount}`);
 
     return jsonResponse({ success: true, output_url: outputImage, images_used: newCount });
 
