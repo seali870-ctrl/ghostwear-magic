@@ -350,18 +350,36 @@ const Dashboard = () => {
             <div className="card-elevated p-6">
               <h3 className="font-display font-semibold text-foreground mb-4">{t("dashboard.background")}</h3>
               <div className="grid grid-cols-4 gap-2">
-                {BG_OPTIONS.map((bg) => (
-                  <button
-                    key={bg.key}
-                    onClick={() => setBgStyle(bg.key)}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all border ${
-                      bgStyle === bg.key ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-md ${bg.preview}`} />
-                    <span className="text-[10px] font-medium leading-tight text-center">{bg.label}</span>
-                  </button>
-                ))}
+                {BG_OPTIONS.map((bg) => {
+                  const isFreeTrial = userProfile?.plan_type === 'free_trial';
+                  const isLocked = isFreeTrial && bg.premium;
+                  
+                  return (
+                    <button
+                      key={bg.key}
+                      onClick={() => {
+                        if (isLocked) {
+                          setShowUpgradePrompt(true);
+                        } else {
+                          setBgStyle(bg.key);
+                        }
+                      }}
+                      className={`flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all border relative ${
+                        bgStyle === bg.key && !isLocked
+                          ? "border-primary ring-2 ring-primary/20"
+                          : isLocked
+                          ? "border-border opacity-60 cursor-not-allowed"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-md ${bg.preview}`} />
+                      <span className="text-[10px] font-medium leading-tight text-center flex items-center gap-0.5">
+                        {isLocked && <span className="text-[8px]">🔒</span>}
+                        {bg.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
