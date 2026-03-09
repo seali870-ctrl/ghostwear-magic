@@ -59,37 +59,41 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
-    // --- Usage check with service role (bypasses RLS) ---
+    // --- Check if admin by email ---
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: profile, error: profileError } = await adminClient
-      .from('user_profiles')
-      .select('images_used, images_limit, plan_type')
-      .eq('user_id', userId)
-      .single();
+    const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(userId);
+    const isAdmin = authUser?.email === ADMIN_EMAIL;
 
-    if (profileError || !profile) {
-      console.error('Profile fetch error:', profileError);
-      return jsonResponse({ success: false, error: 'User profile not found' }, 404);
-    }
+    // --- Usage check (skip for admin) ---
+    if (!isAdmin) {
+      const { data: profile, error: profileError } = await adminClient
+        .from('user_profiles')
+        .select('images_used, images_limit, plan_type')
+        .eq('user_id', userId)
+        .single();
 
-    // Server-side enforcement: block free trial users at limit
-    if (profile.plan_type === 'free_trial' && profile.images_used >= FREE_TRIAL_LIMIT) {
-      return jsonResponse({
-        success: false,
-        error: "You've used all 5 free images. Upgrade to continue.",
-        code: 'FREE_TRIAL_EXHAUSTED',
-        images_used: profile.images_used,
-      }, 403);
-    }
+      if (profileError || !profile) {
+        console.error('Profile fetch error:', profileError);
+        return jsonResponse({ success: false, error: 'User profile not found' }, 404);
+      }
 
-    // Block any plan that has a non-unlimited limit
-    if (profile.images_limit !== -1 && profile.images_used >= profile.images_limit) {
-      return jsonResponse({
-        success: false,
-        error: 'Plan limit reached. Please upgrade.',
-        code: 'PLAN_LIMIT_REACHED',
-        images_used: profile.images_used,
-      }, 403);
+      if (profile.plan_type === 'free_trial' && profile.images_used >= FREE_TRIAL_LIMIT) {
+        return jsonResponse({
+          success: false,
+          error: "You've used all 5 free images. Upgrade to continue.",
+          code: 'FREE_TRIAL_EXHAUSTED',
+          images_used: profile.images_used,
+        }, 403);
+      }
+
+      if (profile.images_limit !== -1 && profile.images_used >= profile.images_limit) {
+        return jsonResponse({
+          success: false,
+          error: 'Plan limit reached. Please upgrade.',
+          code: 'PLAN_LIMIT_REACHED',
+          images_used: profile.images_used,
+        }, 403);
+      }
     }
 
     // --- Process image ---
