@@ -361,11 +361,11 @@ const Dashboard = () => {
             {/* Process Button */}
             <Button
               className="w-full btn-gradient py-6 text-base gap-2"
-              onClick={handleProcess}
+              onClick={!canProcess ? () => setShowUpgradePrompt(true) : handleProcess}
               disabled={processing || !uploadedImage}
             >
               {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-              {t("dashboard.process")}
+              {!canProcess ? "Upgrade to Process" : t("dashboard.process")}
             </Button>
           </div>
 
