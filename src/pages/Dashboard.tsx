@@ -74,6 +74,8 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
   },
 ];
 
+const FREE_TRIAL_LIMIT = 5;
+
 const Dashboard = () => {
   const { t, language, setLanguage } = useLanguage();
   const { user, signOut, loading: authLoading } = useAuth();
