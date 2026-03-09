@@ -20,7 +20,7 @@ import {
   Shield,
 } from "lucide-react";
 
-type Style = "ghost" | "floating" | "flatlay";
+const ADMIN_EMAIL = "seali870@gmail.com";
 
 type BgStyle = "white-studio" | "grey-studio" | "transparent" | "sunny-studio" | "cool-studio" | "beach" | "forest" | "autumn";
 
