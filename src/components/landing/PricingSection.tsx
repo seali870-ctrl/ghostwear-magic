@@ -6,25 +6,28 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    key: "starter",
-    price: 19,
-    images: 20,
+    key: "free_trial",
+    price: 0,
+    images: 5,
     features: ["feature1", "feature2", "feature3"],
     popular: false,
+    subtitle: "One-time only",
+  },
+  {
+    key: "starter",
+    price: 9,
+    images: 30,
+    features: ["feature1", "feature2", "feature3", "feature4"],
+    popular: true,
+    subtitle: "Per month",
   },
   {
     key: "pro",
-    price: 49,
-    images: 100,
-    features: ["feature1", "feature2", "feature3", "feature4"],
-    popular: true,
-  },
-  {
-    key: "business",
-    price: 99,
+    price: 29,
     images: -1,
-    features: ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"],
+    features: ["feature1", "feature2", "feature3", "feature4", "feature5"],
     popular: false,
+    subtitle: "Per month",
   },
 ];
 
