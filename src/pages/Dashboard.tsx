@@ -145,7 +145,25 @@ const Dashboard = () => {
       if (!data?.success) throw new Error(data?.error || 'Processing failed');
 
       setProcessedImage(data.output_url);
-      setUsedImages((prev) => prev + 1);
+      
+      // Update user profile images used count
+      if (userProfile) {
+        const newImagesUsed = userProfile.images_used + 1;
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({ images_used: newImagesUsed })
+          .eq('user_id', user.id);
+          
+        if (!updateError) {
+          setUserProfile({ ...userProfile, images_used: newImagesUsed });
+          
+          // Check if user needs to upgrade
+          if (userProfile.plan_type === 'free_trial' && newImagesUsed >= userProfile.images_limit) {
+            setShowUpgradePrompt(true);
+          }
+        }
+      }
+      
       toast.success("Image processed successfully!");
     } catch (err: any) {
       console.error('Processing error:', err);
