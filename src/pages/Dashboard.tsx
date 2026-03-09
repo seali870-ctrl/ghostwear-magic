@@ -92,6 +92,32 @@ const Dashboard = () => {
     if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+      
+      setUserProfile(data);
+      
+      // Show upgrade prompt if free trial is used up
+      if (data.plan_type === 'free_trial' && data.images_used >= data.images_limit) {
+        setShowUpgradePrompt(true);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
