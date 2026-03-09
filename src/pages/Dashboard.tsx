@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Upload,
@@ -14,6 +15,8 @@ import {
   LogOut,
   Globe,
   Sparkles,
+  AlertCircle,
+  Crown,
 } from "lucide-react";
 
 type Style = "ghost" | "floating" | "flatlay";
@@ -82,12 +85,38 @@ const Dashboard = () => {
   const [style, setStyle] = useState<Style>("ghost");
   const [bgStyle, setBgStyle] = useState<BgStyle>("white-studio");
   const [processing, setProcessing] = useState(false);
-  const [usedImages, setUsedImages] = useState(7);
-  const totalImages = 20;
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+      
+      setUserProfile(data);
+      
+      // Show upgrade prompt if free trial is used up
+      if (data.plan_type === 'free_trial' && data.images_used >= data.images_limit) {
+        setShowUpgradePrompt(true);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,7 +145,25 @@ const Dashboard = () => {
       if (!data?.success) throw new Error(data?.error || 'Processing failed');
 
       setProcessedImage(data.output_url);
-      setUsedImages((prev) => prev + 1);
+      
+      // Update user profile images used count
+      if (userProfile) {
+        const newImagesUsed = userProfile.images_used + 1;
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({ images_used: newImagesUsed })
+          .eq('user_id', user.id);
+          
+        if (!updateError) {
+          setUserProfile({ ...userProfile, images_used: newImagesUsed });
+          
+          // Check if user needs to upgrade
+          if (userProfile.plan_type === 'free_trial' && newImagesUsed >= userProfile.images_limit) {
+            setShowUpgradePrompt(true);
+          }
+        }
+      }
+      
       toast.success("Image processed successfully!");
     } catch (err: any) {
       console.error('Processing error:', err);
@@ -183,7 +230,25 @@ const Dashboard = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="font-display text-2xl font-bold text-foreground mb-1">{t("dashboard.title")}</h2>
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="font-display text-2xl font-bold text-foreground">{t("dashboard.title")}</h2>
+            {userProfile?.plan_type === 'free_trial' && (
+              <Badge variant="secondary" className="text-xs">
+                Free Trial
+              </Badge>
+            )}
+            {userProfile?.plan_type === 'starter' && (
+              <Badge variant="default" className="text-xs">
+                Starter Plan
+              </Badge>
+            )}
+            {userProfile?.plan_type === 'pro' && (
+              <Badge variant="default" className="text-xs bg-gradient-to-r from-primary to-primary/80">
+                <Crown className="w-3 h-3 mr-1" />
+                Pro Plan
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground text-sm">{user?.email}</p>
         </div>
 
@@ -192,11 +257,38 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-foreground">{t("dashboard.usage")}</span>
             <span className="text-sm text-muted-foreground">
-              {usedImages} {t("dashboard.of")} {totalImages} {t("dashboard.images_used")}
+              {userProfile?.images_used || 0} {t("dashboard.of")} {userProfile?.images_limit === -1 ? "∞" : userProfile?.images_limit || 5} {t("dashboard.images_used")}
             </span>
           </div>
-          <Progress value={(usedImages / totalImages) * 100} className="h-2" />
+          {userProfile?.images_limit === -1 ? (
+            <div className="text-sm text-primary font-medium">Unlimited usage</div>
+          ) : (
+            <Progress value={((userProfile?.images_used || 0) / (userProfile?.images_limit || 5)) * 100} className="h-2" />
+          )}
         </div>
+
+        {/* Upgrade Prompt */}
+        {showUpgradePrompt && (
+          <div className="card-elevated p-6 mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-1">Free trial complete!</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  You've used all 5 free trial images. Upgrade to continue processing images.
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" className="btn-gradient">
+                    Upgrade to Starter ($9/month)
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowUpgradePrompt(false)}>
+                    Maybe later
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Controls */}
