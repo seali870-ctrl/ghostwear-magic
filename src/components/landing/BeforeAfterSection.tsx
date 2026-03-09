@@ -1,7 +1,17 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
+
+// ========================================
+// 📷 REPLACE YOUR BEFORE/AFTER IMAGES HERE
+// ========================================
+// Option 1: Import local images from src/assets/
 import beforeImg from "@/assets/before-example.jpg";
 import afterImg from "@/assets/after-example.jpg";
+
+// Option 2: Use external URLs (uncomment and replace the imports above)
+// const beforeImg = "https://your-image-url.com/before.jpg";
+// const afterImg = "https://your-image-url.com/after.jpg";
+// ========================================
 
 const BeforeAfterSection = () => {
   const { t } = useLanguage();
