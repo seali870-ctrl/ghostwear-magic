@@ -86,12 +86,23 @@ serve(async (req) => {
         const updateData: Record<string, unknown> = { plan_type, images_limit };
         if (images_used !== undefined) updateData.images_used = images_used;
 
-        const { error } = await adminClient
+        // Try update first
+        const { data: updated, error: updateErr } = await adminClient
           .from('user_profiles')
           .update(updateData)
-          .eq('user_id', user_id);
+          .eq('user_id', user_id)
+          .select();
 
-        if (error) throw error;
+        if (updateErr) throw updateErr;
+
+        // If no row existed, insert one
+        if (!updated || updated.length === 0) {
+          const { error: insertErr } = await adminClient
+            .from('user_profiles')
+            .insert({ user_id, ...updateData });
+          if (insertErr) throw insertErr;
+        }
+
         return jsonResponse({ success: true });
       }
 
@@ -105,13 +116,33 @@ serve(async (req) => {
           return jsonResponse({ error: `User with email ${email} not found` }, 404);
         }
 
-        const { error } = await adminClient
-          .from('user_profiles')
-          .update({ plan_type, images_limit: images_limit ?? -1, images_used: 0 })
-          .eq('user_id', targetUser.id);
+        const newData = { plan_type, images_limit: images_limit ?? -1, images_used: 0 };
 
-        if (error) throw error;
-        return jsonResponse({ success: true, user_id: targetUser.id });
+        // Try update first
+        const { data: updated, error: updateErr } = await adminClient
+          .from('user_profiles')
+          .update(newData)
+          .eq('user_id', targetUser.id)
+          .select();
+
+        if (updateErr) throw updateErr;
+
+        // If no profile row, insert one
+        if (!updated || updated.length === 0) {
+          const { error: insertErr } = await adminClient
+            .from('user_profiles')
+            .insert({ user_id: targetUser.id, ...newData });
+          if (insertErr) throw insertErr;
+        }
+
+        // Verify the update
+        const { data: verify } = await adminClient
+          .from('user_profiles')
+          .select('plan_type, images_limit')
+          .eq('user_id', targetUser.id)
+          .single();
+
+        return jsonResponse({ success: true, user_id: targetUser.id, verified: verify });
       }
 
       default:
