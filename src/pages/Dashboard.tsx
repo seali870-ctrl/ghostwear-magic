@@ -85,8 +85,8 @@ const Dashboard = () => {
   const [style, setStyle] = useState<Style>("ghost");
   const [bgStyle, setBgStyle] = useState<BgStyle>("white-studio");
   const [processing, setProcessing] = useState(false);
-  const [usedImages, setUsedImages] = useState(7);
-  const totalImages = 20;
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
