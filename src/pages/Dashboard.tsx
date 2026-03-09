@@ -182,7 +182,10 @@ const Dashboard = () => {
         return;
       }
 
-      if (error) throw error;
+      if (error) {
+        const errorMsg = data?.error || error.message || 'Processing failed';
+        throw new Error(errorMsg);
+      }
       if (!data?.success) throw new Error(data?.error || 'Processing failed');
 
       setProcessedImage(data.output_url);
