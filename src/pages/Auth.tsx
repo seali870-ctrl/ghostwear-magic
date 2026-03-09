@@ -48,7 +48,7 @@ const Auth = () => {
           <Button
             onClick={() => handleSocialLogin("google")}
             disabled={loading !== null}
-            className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-border"
+            className="w-full bg-background hover:bg-muted text-foreground border border-border"
             size="lg"
           >
             {loading === "google" ? (
@@ -79,7 +79,7 @@ const Auth = () => {
           <Button
             onClick={() => handleSocialLogin("apple")}
             disabled={loading !== null}
-            className="w-full bg-black hover:bg-gray-900 text-white"
+            className="w-full bg-foreground hover:bg-foreground/90 text-background"
             size="lg"
           >
             {loading === "apple" ? (
