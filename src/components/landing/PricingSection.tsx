@@ -71,7 +71,7 @@ const PricingSection = () => {
 
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="font-display text-4xl font-bold text-foreground">${plan.price}</span>
-                <span className="text-muted-foreground text-sm">{t("pricing.mo")}</span>
+                <span className="text-muted-foreground text-sm">{plan.subtitle}</span>
               </div>
 
               <p className="text-muted-foreground text-sm mb-6">

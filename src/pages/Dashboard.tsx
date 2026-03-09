@@ -257,11 +257,38 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-foreground">{t("dashboard.usage")}</span>
             <span className="text-sm text-muted-foreground">
-              {usedImages} {t("dashboard.of")} {totalImages} {t("dashboard.images_used")}
+              {userProfile?.images_used || 0} {t("dashboard.of")} {userProfile?.images_limit === -1 ? "∞" : userProfile?.images_limit || 5} {t("dashboard.images_used")}
             </span>
           </div>
-          <Progress value={(usedImages / totalImages) * 100} className="h-2" />
+          {userProfile?.images_limit === -1 ? (
+            <div className="text-sm text-primary font-medium">Unlimited usage</div>
+          ) : (
+            <Progress value={((userProfile?.images_used || 0) / (userProfile?.images_limit || 5)) * 100} className="h-2" />
+          )}
         </div>
+
+        {/* Upgrade Prompt */}
+        {showUpgradePrompt && (
+          <div className="card-elevated p-6 mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-1">Free trial complete!</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  You've used all 5 free trial images. Upgrade to continue processing images.
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" className="btn-gradient">
+                    Upgrade to Starter ($9/month)
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowUpgradePrompt(false)}>
+                    Maybe later
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Controls */}
