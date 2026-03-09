@@ -20,6 +20,8 @@ import {
   Shield,
 } from "lucide-react";
 
+const ADMIN_EMAIL = "seali870@gmail.com";
+
 type Style = "ghost" | "floating" | "flatlay";
 
 type BgStyle = "white-studio" | "grey-studio" | "transparent" | "sunny-studio" | "cool-studio" | "beach" | "forest" | "autumn";
@@ -106,6 +108,16 @@ const Dashboard = () => {
     const fetchUserProfile = async () => {
       if (!user) return;
       
+      // Admin bypass: always treat admin as business/unlimited
+      if (user.email === ADMIN_EMAIL) {
+        setUserProfile({
+          plan_type: 'business',
+          images_used: 0,
+          images_limit: -1,
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -119,7 +131,6 @@ const Dashboard = () => {
       
       setUserProfile(data);
       
-      // Show upgrade prompt if free trial is used up
       if (data.plan_type === 'free_trial' && data.images_used >= data.images_limit) {
         setShowUpgradePrompt(true);
       }
@@ -139,11 +150,12 @@ const Dashboard = () => {
     reader.readAsDataURL(file);
   };
 
-  const canProcess = userProfile && !(
+  const isAdmin = user?.email === ADMIN_EMAIL;
+  const canProcess = isAdmin || (userProfile && !(
     userProfile.plan_type === 'free_trial' && userProfile.images_used >= FREE_TRIAL_LIMIT
   ) && !(
     userProfile.images_limit !== -1 && userProfile.images_used >= userProfile.images_limit
-  );
+  ));
 
   const handleProcess = async () => {
     if (!uploadedImage) {
