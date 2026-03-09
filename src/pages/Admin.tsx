@@ -75,12 +75,19 @@ const Admin = () => {
     }
   };
 
-  const handleGrantUnlimited = async () => {
+  const handleGrantAccess = async () => {
     if (!grantEmail.trim()) return;
+    const config = PLAN_CONFIG[grantPlan];
+    if (!config) return;
     setGranting(true);
     try {
-      await adminInvoke({ action: "grant_unlimited", email: grantEmail.trim() });
-      toast.success(`Unlimited access granted to ${grantEmail}`);
+      await adminInvoke({
+        action: "grant_access",
+        email: grantEmail.trim(),
+        plan_type: grantPlan,
+        images_limit: config.images_limit,
+      });
+      toast.success(`${config.label} access granted to ${grantEmail}`);
       setGrantEmail("");
       fetchUsers();
     } catch (err: any) {
