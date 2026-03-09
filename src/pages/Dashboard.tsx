@@ -74,6 +74,8 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
   },
 ];
 
+const FREE_TRIAL_LIMIT = 5;
+
 const Dashboard = () => {
   const { t, language, setLanguage } = useLanguage();
   const { user, signOut, loading: authLoading } = useAuth();
@@ -129,9 +131,19 @@ const Dashboard = () => {
     reader.readAsDataURL(file);
   };
 
+  const canProcess = userProfile && !(
+    userProfile.plan_type === 'free_trial' && userProfile.images_used >= FREE_TRIAL_LIMIT
+  ) && !(
+    userProfile.images_limit !== -1 && userProfile.images_used >= userProfile.images_limit
+  );
+
   const handleProcess = async () => {
     if (!uploadedImage) {
       toast.error("Please upload an image first");
+      return;
+    }
+    if (!canProcess) {
+      setShowUpgradePrompt(true);
       return;
     }
     setProcessing(true);
@@ -141,26 +153,26 @@ const Dashboard = () => {
         body: { image_base64: uploadedImage, background: selectedBg?.description || "" },
       });
 
+      // Handle 403 from server-side limit enforcement
+      if (data?.code === 'FREE_TRIAL_EXHAUSTED' || data?.code === 'PLAN_LIMIT_REACHED') {
+        if (data.images_used !== undefined && userProfile) {
+          setUserProfile({ ...userProfile, images_used: data.images_used });
+        }
+        setShowUpgradePrompt(true);
+        return;
+      }
+
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Processing failed');
 
       setProcessedImage(data.output_url);
       
-      // Update user profile images used count
-      if (userProfile) {
-        const newImagesUsed = userProfile.images_used + 1;
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({ images_used: newImagesUsed })
-          .eq('user_id', user.id);
-          
-        if (!updateError) {
-          setUserProfile({ ...userProfile, images_used: newImagesUsed });
-          
-          // Check if user needs to upgrade
-          if (userProfile.plan_type === 'free_trial' && newImagesUsed >= userProfile.images_limit) {
-            setShowUpgradePrompt(true);
-          }
+      // Sync usage from server response
+      if (userProfile && data.images_used !== undefined) {
+        const updated = { ...userProfile, images_used: data.images_used };
+        setUserProfile(updated);
+        if (updated.plan_type === 'free_trial' && updated.images_used >= FREE_TRIAL_LIMIT) {
+          setShowUpgradePrompt(true);
         }
       }
       
@@ -275,7 +287,7 @@ const Dashboard = () => {
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground mb-1">Free trial complete!</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  You've used all 5 free trial images. Upgrade to continue processing images.
+                  You've used all 5 free images. Upgrade to continue.
                 </p>
                 <div className="flex gap-2">
                   <Button size="sm" className="btn-gradient">
@@ -349,11 +361,11 @@ const Dashboard = () => {
             {/* Process Button */}
             <Button
               className="w-full btn-gradient py-6 text-base gap-2"
-              onClick={handleProcess}
+              onClick={!canProcess ? () => setShowUpgradePrompt(true) : handleProcess}
               disabled={processing || !uploadedImage}
             >
               {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-              {t("dashboard.process")}
+              {!canProcess ? "Upgrade to Process" : t("dashboard.process")}
             </Button>
           </div>
 
