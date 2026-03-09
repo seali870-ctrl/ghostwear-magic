@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 const plans = [
   {
     key: "free_trial",
+    name: "Free Trial",
     price: 0,
     images: 5,
     features: ["feature1", "feature2", "feature3"],
@@ -15,18 +16,20 @@ const plans = [
   },
   {
     key: "starter",
+    name: null,
     price: 9,
     images: 30,
     features: ["feature1", "feature2", "feature3", "feature4"],
-    popular: true,
+    popular: false,
     subtitle: "Per month",
   },
   {
     key: "pro",
+    name: null,
     price: 29,
     images: -1,
     features: ["feature1", "feature2", "feature3", "feature4", "feature5"],
-    popular: false,
+    popular: true,
     subtitle: "Per month",
   },
 ];
