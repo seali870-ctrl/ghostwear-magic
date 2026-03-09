@@ -230,7 +230,25 @@ const Dashboard = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="font-display text-2xl font-bold text-foreground mb-1">{t("dashboard.title")}</h2>
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="font-display text-2xl font-bold text-foreground">{t("dashboard.title")}</h2>
+            {userProfile?.plan_type === 'free_trial' && (
+              <Badge variant="secondary" className="text-xs">
+                Free Trial
+              </Badge>
+            )}
+            {userProfile?.plan_type === 'starter' && (
+              <Badge variant="default" className="text-xs">
+                Starter Plan
+              </Badge>
+            )}
+            {userProfile?.plan_type === 'pro' && (
+              <Badge variant="default" className="text-xs bg-gradient-to-r from-primary to-primary/80">
+                <Crown className="w-3 h-3 mr-1" />
+                Pro Plan
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground text-sm">{user?.email}</p>
         </div>
 
