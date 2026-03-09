@@ -42,6 +42,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [grantEmail, setGrantEmail] = useState("");
+  const [grantPlan, setGrantPlan] = useState<string>("business");
   const [granting, setGranting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
