@@ -12,12 +12,13 @@ import {
   Zap,
 } from "lucide-react";
 
-const WHATSAPP_LINK = "https://wa.me/201040535481";
+const WHATSAPP_LINK = "https://api.whatsapp.com/send?phone=201040535481";
+const TELEGRAM_LINK = "https://t.me/TTRQ33";
 
 const plans = [
-  { name: "Starter", price: "$9", period: "/mo", images: "30 images/month", whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249" },
-  { name: "Pro", price: "$29", period: "/mo", images: "100 images/month", popular: true, whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2429" },
-  { name: "Business", price: "$20", originalPrice: "$59", period: "/mo", images: "Unlimited images", whatsapp: "https://wa.me/201040535481?text=أريد%20الاشتراك%20في%20باقة%20Business", badge: "🔥 الشهر الأول فقط", note: "يتجدد بـ $59/شهر بعد ذلك" },
+  { name: "Starter", price: "$9", period: "/mo", images: "30 images/month", whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249" },
+  { name: "Pro", price: "$29", period: "/mo", images: "100 images/month", popular: true, whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2429" },
+  { name: "Business", price: "$20", originalPrice: "$59", period: "/mo", images: "Unlimited images", whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business", badge: "🔥 الشهر الأول فقط", note: "يتجدد بـ $59/شهر بعد ذلك" },
 ];
 
 const paymentMethods = [
