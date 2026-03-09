@@ -1,0 +1,1 @@
+ALTER TABLE public.user_profiles DROP CONSTRAINT IF EXISTS user_profiles_plan_type_check;
