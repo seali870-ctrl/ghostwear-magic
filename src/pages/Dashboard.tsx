@@ -15,6 +15,8 @@ import {
   LogOut,
   Globe,
   Sparkles,
+  AlertCircle,
+  Crown,
 } from "lucide-react";
 
 type Style = "ghost" | "floating" | "flatlay";
