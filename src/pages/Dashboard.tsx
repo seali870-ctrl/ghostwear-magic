@@ -263,8 +263,13 @@ const Dashboard = () => {
             )}
             {userProfile?.plan_type === 'pro' && (
               <Badge variant="default" className="text-xs bg-gradient-to-r from-primary to-primary/80">
-                <Crown className="w-3 h-3 mr-1" />
                 Pro Plan
+              </Badge>
+            )}
+            {userProfile?.plan_type === 'business' && (
+              <Badge variant="default" className="text-xs bg-gradient-to-r from-primary to-primary/80">
+                <Crown className="w-3 h-3 mr-1" />
+                Business Plan
               </Badge>
             )}
           </div>
