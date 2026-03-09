@@ -106,6 +106,16 @@ const Dashboard = () => {
     const fetchUserProfile = async () => {
       if (!user) return;
       
+      // Admin bypass: always treat admin as business/unlimited
+      if (user.email === ADMIN_EMAIL) {
+        setUserProfile({
+          plan_type: 'business',
+          images_used: 0,
+          images_limit: -1,
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -119,7 +129,6 @@ const Dashboard = () => {
       
       setUserProfile(data);
       
-      // Show upgrade prompt if free trial is used up
       if (data.plan_type === 'free_trial' && data.images_used >= data.images_limit) {
         setShowUpgradePrompt(true);
       }
