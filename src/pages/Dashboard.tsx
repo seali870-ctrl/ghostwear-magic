@@ -287,7 +287,7 @@ const Dashboard = () => {
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground mb-1">Free trial complete!</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  You've used all 5 free trial images. Upgrade to continue processing images.
+                  You've used all 5 free images. Upgrade to continue.
                 </p>
                 <div className="flex gap-2">
                   <Button size="sm" className="btn-gradient">
