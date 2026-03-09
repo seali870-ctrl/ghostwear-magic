@@ -69,7 +69,7 @@ const PricingSection = () => {
               )}
 
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">
-                {t(`pricing.${plan.key}`)}
+                {plan.name || t(`pricing.${plan.key}`)}
               </h3>
 
               <div className="flex items-baseline gap-1 mb-1">
