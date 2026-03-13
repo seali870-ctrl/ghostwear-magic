@@ -118,6 +118,7 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
     key: "sunny-studio",
     label: "Sunny Studio",
     preview: "bg-gradient-to-br from-[hsl(45,85%,75%)] to-[hsl(38,90%,60%)]",
+
     description: "Bright warm sunny studio with golden sunlight streaming in, warm and inviting atmosphere.",
     premium: true,
   },
