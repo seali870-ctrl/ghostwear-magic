@@ -115,23 +115,12 @@ const Payment = () => {
                   Most Popular
                 </span>
               )}
-              {"badge" in plan && plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                  {plan.badge}
-                </span>
-              )}
               <h3 className="font-display font-bold text-lg text-foreground">{plan.name}</h3>
               <div className="mt-2">
-                {"originalPrice" in plan && plan.originalPrice && (
-                  <span className="text-muted-foreground text-sm line-through mr-1">{plan.originalPrice}</span>
-                )}
                 <span className="text-3xl font-bold text-foreground">{plan.price}</span>
                 <span className="text-muted-foreground text-sm">{plan.period}</span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">{plan.images}</p>
-              {"note" in plan && plan.note && (
-                <p className="text-xs text-orange-500 font-medium mt-1">{plan.note}</p>
-              )}
             </a>
           ))}
         </div>
