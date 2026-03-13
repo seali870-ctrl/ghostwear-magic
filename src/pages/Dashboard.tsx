@@ -596,6 +596,10 @@ const Dashboard = () => {
                         <RotateCw className={`w-3.5 h-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                         360°
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={handleCreateVideo} className="gap-1 text-xs px-2" disabled={isGeneratingVideo}>
+                        <Video className="w-3.5 h-3.5" />
+                        {language === "ar" ? "فيديو" : "Video"}
+                      </Button>
                       <Button size="sm" variant="outline" onClick={handleDownload} className="gap-1.5">
                         <Download className="w-3.5 h-3.5" />
                         {t("dashboard.download")}
