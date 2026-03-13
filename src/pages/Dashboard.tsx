@@ -21,6 +21,8 @@ import {
   Crown,
   Shield,
   RotateCw,
+  Video,
+  Play,
 } from "lucide-react";
 
 const ADMIN_EMAIL = "seali870@gmail.com";
@@ -134,6 +136,10 @@ const Dashboard = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [comparePosition, setComparePosition] = useState(50);
   const [showCompare, setShowCompare] = useState(false);
+  const [showVideoPreview, setShowVideoPreview] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const videoCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -240,6 +246,107 @@ const Dashboard = () => {
     setRotationDeg(prev => prev + 360);
     setTimeout(() => setIsSpinning(false), 1000);
   }, [isSpinning]);
+
+  const handleCreateVideo = useCallback(async () => {
+    if (!processedImage) return;
+    setShowVideoPreview(true);
+    setIsGeneratingVideo(true);
+    setVideoBlob(null);
+
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = processedImage;
+      });
+
+      const canvasWidth = 600;
+      const canvasHeight = 800;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext("2d")!;
+
+      const fps = 30;
+      const duration = 6;
+      const totalFrames = fps * duration;
+
+      // Try MediaRecorder with WebM
+      const stream = canvas.captureStream(fps);
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+      const videoPromise = new Promise<Blob>((resolve) => {
+        recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+      });
+
+      recorder.start();
+
+      // Render frames
+      for (let frame = 0; frame < totalFrames; frame++) {
+        const t = frame / totalFrames;
+        const time = t * duration;
+
+        // Animation values
+        const floatY = Math.sin(time * Math.PI * 2 / 3) * 12; // float cycle every 3s
+        const rotAngle = Math.sin(time * Math.PI * 2 / 4) * 3 * (Math.PI / 180); // rotate cycle every 4s
+        const scale = 1.0 + 0.05 * Math.sin(time * Math.PI * 2 / 5); // zoom cycle every 5s
+        const shadowAlpha = 0.15 + 0.1 * Math.sin(time * Math.PI * 2 / 2); // shadow pulse
+
+        // Clear
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+        // Draw image with transformations
+        ctx.save();
+        ctx.translate(canvasWidth / 2, canvasHeight / 2 + floatY);
+        ctx.rotate(rotAngle);
+        ctx.scale(scale, scale);
+
+        // Shadow
+        const shadowSize = 120 + 20 * Math.sin(time * Math.PI * 2 / 2);
+        ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(0, canvasHeight * 0.35, shadowSize, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Image - maintain aspect ratio
+        const imgAspect = img.width / img.height;
+        const drawHeight = canvasHeight * 0.75;
+        const drawWidth = drawHeight * imgAspect;
+        ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        ctx.restore();
+
+        await new Promise((r) => setTimeout(r, 1000 / fps));
+      }
+
+      recorder.stop();
+      const blob = await videoPromise;
+      setVideoBlob(blob);
+      toast.success(language === "ar" ? "تم إنشاء الفيديو بنجاح!" : "Video created successfully!");
+    } catch (err) {
+      console.error("Video generation error:", err);
+      toast.error("Failed to create video");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  }, [processedImage, language]);
+
+  const handleDownloadVideo = useCallback(() => {
+    if (!videoBlob) return;
+    const url = URL.createObjectURL(videoBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ghostwear-video-${Date.now()}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [videoBlob]);
 
   const resultBgClass = (() => {
     switch (bgStyle) {
@@ -489,6 +596,10 @@ const Dashboard = () => {
                         <RotateCw className={`w-3.5 h-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                         360°
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={handleCreateVideo} className="gap-1 text-xs px-2" disabled={isGeneratingVideo}>
+                        <Video className="w-3.5 h-3.5" />
+                        {language === "ar" ? "فيديو" : "Video"}
+                      </Button>
                       <Button size="sm" variant="outline" onClick={handleDownload} className="gap-1.5">
                         <Download className="w-3.5 h-3.5" />
                         {t("dashboard.download")}
@@ -542,6 +653,59 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Video Preview */}
+            <AnimatePresence>
+              {showVideoPreview && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="card-elevated p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                      <Video className="w-4 h-4 text-primary" />
+                      {language === "ar" ? "معاينة الفيديو" : "Video Preview"}
+                    </h3>
+                    <Button size="sm" variant="ghost" onClick={() => { setShowVideoPreview(false); setVideoBlob(null); }}>
+                      ✕
+                    </Button>
+                  </div>
+
+                  {isGeneratingVideo ? (
+                    <div className="aspect-[3/4] max-h-[400px] rounded-lg bg-muted flex flex-col items-center justify-center gap-4">
+                      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">
+                          {language === "ar" ? "جاري إنشاء الفيديو..." : "Creating video..."}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {language === "ar" ? "6 ثواني من الرسوم المتحركة" : "6 seconds of animation"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : videoBlob ? (
+                    <div className="space-y-4">
+                      <div className="aspect-[3/4] max-h-[400px] rounded-lg overflow-hidden bg-muted">
+                        <video
+                          src={URL.createObjectURL(videoBlob)}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <Button onClick={handleDownloadVideo} className="w-full btn-gradient gap-2">
+                        <Download className="w-4 h-4" />
+                        {language === "ar" ? "تحميل الفيديو (WebM)" : "Download Video (WebM)"}
+                      </Button>
+                    </div>
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
