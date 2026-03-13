@@ -63,7 +63,7 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
     label: "Transparent",
     preview: "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlNWU1Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU1ZTUiLz48L3N2Zz4=')]",
     description: "Transparent background with no backdrop, just the clothing on empty space.",
-    premium: true,
+    premium: false,
   },
   {
     key: "sunset-golden",
