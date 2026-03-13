@@ -25,7 +25,7 @@ import {
 
 const ADMIN_EMAIL = "seali870@gmail.com";
 
-type Style = "ghost" | "floating" | "flatlay" | "female" | "male" | "child_boy" | "child_girl" | "teen_boy" | "teen_girl";
+type Style = "ghost" | "floating" | "flatlay" | "female" | "male" | "child_boy" | "child_girl" | "teen_boy" | "teen_girl" | "baby_boy" | "baby_girl";
 
 type BgStyle =
   | "white-studio" | "grey-studio" | "transparent"
