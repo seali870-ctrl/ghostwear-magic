@@ -41,6 +41,8 @@ const STYLE_OPTIONS: { key: Style; icon: string; label: string; labelAr: string 
   { key: "male", icon: "👨", label: "Male Model", labelAr: "موديل ذكر" },
   { key: "child_boy", icon: "👦", label: "Child Boy", labelAr: "طفل ولد" },
   { key: "child_girl", icon: "👧", label: "Child Girl", labelAr: "طفلة بنت" },
+  { key: "teen_boy", icon: "🧑", label: "Teen Boy", labelAr: "مراهق ولد" },
+  { key: "teen_girl", icon: "👩‍🦱", label: "Teen Girl", labelAr: "مراهقة بنت" },
 ];
 
 const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: string; premium: boolean }[] = [
