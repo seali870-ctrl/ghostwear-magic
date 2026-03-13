@@ -22,7 +22,7 @@ const plans = [
     features: ["feature1", "feature2", "feature3", "feature4"],
     popular: false,
     subtitle: "Per month",
-    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%245",
   },
   {
     key: "pro",
