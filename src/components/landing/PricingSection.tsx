@@ -86,9 +86,7 @@ const PricingSection = () => {
               </h3>
 
               <div className="flex items-baseline gap-1 mb-1">
-                {"originalPrice" in plan && plan.originalPrice && (
-                  <span className="text-muted-foreground text-lg line-through mr-1">${plan.originalPrice}</span>
-                )}
+                <span className="font-display text-4xl font-bold text-foreground">${plan.price}</span>
                 <span className="font-display text-4xl font-bold text-foreground">${plan.price}</span>
                 <span className="text-muted-foreground text-sm">{plan.subtitle}</span>
               </div>
