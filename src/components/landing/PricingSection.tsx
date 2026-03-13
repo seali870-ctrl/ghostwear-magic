@@ -80,11 +80,6 @@ const PricingSection = () => {
                   {t("pricing.popular")}
                 </span>
               )}
-              {"badge" in plan && plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold whitespace-nowrap">
-                  {plan.badge}
-                </span>
-              )}
 
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">
                 {plan.name || t(`pricing.${plan.key}`)}
