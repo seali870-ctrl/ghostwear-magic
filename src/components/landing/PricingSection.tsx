@@ -37,8 +37,8 @@ const plans = [
   {
     key: "business",
     name: null,
-    price: 20,
-    originalPrice: 59,
+    price: 49,
+    originalPrice: null,
     images: -1,
     features: ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"],
     popular: false,
