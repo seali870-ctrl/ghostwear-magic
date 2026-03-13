@@ -114,6 +114,41 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
     description: "Vibrant neon city night scene with colorful neon lights, purple and pink tones, cyberpunk urban atmosphere.",
     premium: true,
   },
+  {
+    key: "sunny-studio",
+    label: "Sunny Studio",
+    preview: "bg-gradient-to-br from-[hsl(45,85%,75%)] to-[hsl(38,90%,60%)]",
+    description: "Bright warm sunny studio with golden sunlight streaming in, warm and inviting atmosphere.",
+    premium: true,
+  },
+  {
+    key: "cold-studio",
+    label: "Cold Studio",
+    preview: "bg-gradient-to-br from-[hsl(200,40%,75%)] to-[hsl(210,50%,60%)]",
+    description: "Cool-toned studio with soft blue and icy lighting, clean and modern cold atmosphere.",
+    premium: true,
+  },
+  {
+    key: "forest",
+    label: "Forest",
+    preview: "bg-gradient-to-b from-[hsl(140,45%,35%)] to-[hsl(100,35%,50%)]",
+    description: "Lush green forest setting with tall trees, dappled sunlight filtering through leaves, natural earthy tones.",
+    premium: true,
+  },
+  {
+    key: "sea",
+    label: "Sea",
+    preview: "bg-gradient-to-b from-[hsl(195,70%,55%)] to-[hsl(205,60%,40%)]",
+    description: "Beautiful ocean and sea backdrop with blue waves, sandy beach edge, and clear sky, fresh coastal atmosphere.",
+    premium: true,
+  },
+  {
+    key: "autumn",
+    label: "Autumn",
+    preview: "bg-gradient-to-br from-[hsl(25,75%,55%)] to-[hsl(10,60%,45%)]",
+    description: "Warm autumn scene with golden and red falling leaves, trees with orange foliage, cozy seasonal atmosphere.",
+    premium: true,
+  },
 ];
 
 const FREE_TRIAL_LIMIT = 5;
