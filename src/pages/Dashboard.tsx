@@ -30,7 +30,8 @@ type Style = "ghost" | "floating" | "flatlay" | "female" | "male" | "child_boy" 
 type BgStyle =
   | "white-studio" | "grey-studio" | "transparent"
   | "sunset-golden" | "city-skyline" | "marble-studio"
-  | "outdoor-garden" | "desert-dunes" | "rainy-window" | "neon-city";
+  | "outdoor-garden" | "desert-dunes" | "rainy-window" | "neon-city"
+  | "sunny-studio" | "cold-studio" | "forest" | "sea" | "autumn";
 
 const STYLE_OPTIONS: { key: Style; icon: string; label: string; labelAr: string }[] = [
   { key: "ghost", icon: "👻", label: "Ghost Mannequin", labelAr: "مانيكان شبحي" },
