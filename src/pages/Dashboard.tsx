@@ -653,6 +653,59 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Video Preview */}
+            <AnimatePresence>
+              {showVideoPreview && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="card-elevated p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                      <Video className="w-4 h-4 text-primary" />
+                      {language === "ar" ? "معاينة الفيديو" : "Video Preview"}
+                    </h3>
+                    <Button size="sm" variant="ghost" onClick={() => { setShowVideoPreview(false); setVideoBlob(null); }}>
+                      ✕
+                    </Button>
+                  </div>
+
+                  {isGeneratingVideo ? (
+                    <div className="aspect-[3/4] max-h-[400px] rounded-lg bg-muted flex flex-col items-center justify-center gap-4">
+                      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">
+                          {language === "ar" ? "جاري إنشاء الفيديو..." : "Creating video..."}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {language === "ar" ? "6 ثواني من الرسوم المتحركة" : "6 seconds of animation"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : videoBlob ? (
+                    <div className="space-y-4">
+                      <div className="aspect-[3/4] max-h-[400px] rounded-lg overflow-hidden bg-muted">
+                        <video
+                          src={URL.createObjectURL(videoBlob)}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <Button onClick={handleDownloadVideo} className="w-full btn-gradient gap-2">
+                        <Download className="w-4 h-4" />
+                        {language === "ar" ? "تحميل الفيديو (WebM)" : "Download Video (WebM)"}
+                      </Button>
+                    </div>
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
