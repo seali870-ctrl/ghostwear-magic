@@ -21,6 +21,8 @@ import {
   Crown,
   Shield,
   RotateCw,
+  Video,
+  Play,
 } from "lucide-react";
 
 const ADMIN_EMAIL = "seali870@gmail.com";
