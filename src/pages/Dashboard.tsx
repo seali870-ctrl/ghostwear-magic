@@ -247,6 +247,107 @@ const Dashboard = () => {
     setTimeout(() => setIsSpinning(false), 1000);
   }, [isSpinning]);
 
+  const handleCreateVideo = useCallback(async () => {
+    if (!processedImage) return;
+    setShowVideoPreview(true);
+    setIsGeneratingVideo(true);
+    setVideoBlob(null);
+
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = processedImage;
+      });
+
+      const canvasWidth = 600;
+      const canvasHeight = 800;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext("2d")!;
+
+      const fps = 30;
+      const duration = 6;
+      const totalFrames = fps * duration;
+
+      // Try MediaRecorder with WebM
+      const stream = canvas.captureStream(fps);
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+      const videoPromise = new Promise<Blob>((resolve) => {
+        recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+      });
+
+      recorder.start();
+
+      // Render frames
+      for (let frame = 0; frame < totalFrames; frame++) {
+        const t = frame / totalFrames;
+        const time = t * duration;
+
+        // Animation values
+        const floatY = Math.sin(time * Math.PI * 2 / 3) * 12; // float cycle every 3s
+        const rotAngle = Math.sin(time * Math.PI * 2 / 4) * 3 * (Math.PI / 180); // rotate cycle every 4s
+        const scale = 1.0 + 0.05 * Math.sin(time * Math.PI * 2 / 5); // zoom cycle every 5s
+        const shadowAlpha = 0.15 + 0.1 * Math.sin(time * Math.PI * 2 / 2); // shadow pulse
+
+        // Clear
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+        // Draw image with transformations
+        ctx.save();
+        ctx.translate(canvasWidth / 2, canvasHeight / 2 + floatY);
+        ctx.rotate(rotAngle);
+        ctx.scale(scale, scale);
+
+        // Shadow
+        const shadowSize = 120 + 20 * Math.sin(time * Math.PI * 2 / 2);
+        ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(0, canvasHeight * 0.35, shadowSize, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Image - maintain aspect ratio
+        const imgAspect = img.width / img.height;
+        const drawHeight = canvasHeight * 0.75;
+        const drawWidth = drawHeight * imgAspect;
+        ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        ctx.restore();
+
+        await new Promise((r) => setTimeout(r, 1000 / fps));
+      }
+
+      recorder.stop();
+      const blob = await videoPromise;
+      setVideoBlob(blob);
+      toast.success(language === "ar" ? "تم إنشاء الفيديو بنجاح!" : "Video created successfully!");
+    } catch (err) {
+      console.error("Video generation error:", err);
+      toast.error("Failed to create video");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  }, [processedImage, language]);
+
+  const handleDownloadVideo = useCallback(() => {
+    if (!videoBlob) return;
+    const url = URL.createObjectURL(videoBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ghostwear-video-${Date.now()}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [videoBlob]);
+
   const resultBgClass = (() => {
     switch (bgStyle) {
       case "white-studio": return "bg-background border border-border";
