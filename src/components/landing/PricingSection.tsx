@@ -17,35 +17,33 @@ const plans = [
   {
     key: "starter",
     name: null,
-    price: 9,
+    price: 5,
     images: 30,
     features: ["feature1", "feature2", "feature3", "feature4"],
     popular: false,
     subtitle: "Per month",
-    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%245",
   },
   {
     key: "pro",
     name: null,
-    price: 29,
+    price: 15,
     images: 100,
     features: ["feature1", "feature2", "feature3", "feature4", "feature5"],
     popular: true,
     subtitle: "Per month",
-    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2429",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2415",
   },
   {
     key: "business",
     name: null,
-    price: 20,
-    originalPrice: 59,
+    price: 49,
+    originalPrice: null,
     images: -1,
     features: ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"],
     popular: false,
     subtitle: "Per month",
-    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business",
-    badge: "🔥 الشهر الأول فقط",
-    note: "يتجدد بـ $59/شهر بعد ذلك",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business%20%2449",
   },
 ];
 
@@ -82,27 +80,17 @@ const PricingSection = () => {
                   {t("pricing.popular")}
                 </span>
               )}
-              {"badge" in plan && plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold whitespace-nowrap">
-                  {plan.badge}
-                </span>
-              )}
 
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">
                 {plan.name || t(`pricing.${plan.key}`)}
               </h3>
 
               <div className="flex items-baseline gap-1 mb-1">
-                {"originalPrice" in plan && plan.originalPrice && (
-                  <span className="text-muted-foreground text-lg line-through mr-1">${plan.originalPrice}</span>
-                )}
+                <span className="font-display text-4xl font-bold text-foreground">${plan.price}</span>
                 <span className="font-display text-4xl font-bold text-foreground">${plan.price}</span>
                 <span className="text-muted-foreground text-sm">{plan.subtitle}</span>
               </div>
 
-              {"note" in plan && plan.note && (
-                <p className="text-xs text-orange-500 font-medium mb-1">{plan.note}</p>
-              )}
 
               <p className="text-muted-foreground text-sm mb-6">
                 {plan.images === -1 ? t("pricing.unlimited") : `${plan.images} ${t("pricing.images")}`}
