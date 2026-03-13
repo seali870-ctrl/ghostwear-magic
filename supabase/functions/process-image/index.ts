@@ -9,21 +9,34 @@ const corsHeaders = {
 const FREE_TRIAL_LIMIT = 5;
 const ADMIN_EMAIL = 'seali870@gmail.com';
 
-const BASE_PROMPT = `Edit this exact clothing image. Do the following steps:
-
+const MODE_PROMPTS: Record<string, string> = {
+  ghost: `Edit this exact clothing image. Do the following steps:
 1. Keep the EXACT same clothing from the uploaded image - same colors, same patterns
-
 2. Make the clothing appear worn by an invisible human body - natural body shape inside, proper shoulder width, chest, waist
-
 3. The clothing must look INFLATED and 3D - not flat
-
 4. Person-like pose: standing straight, arms slightly away from body
-
 5. The clothing should be the HERO of the image - large, centered, clear, filling at least 60% of the image frame
-
 6. Professional fashion editorial lighting
-
-7. The result should look like a real model is wearing it but the body is invisible`;
+7. The result should look like a real model is wearing it but the body is invisible`,
+  floating: `Edit this exact clothing image. Do the following steps:
+1. Keep the EXACT same clothing - same colors, patterns, design
+2. Make the clothing float in mid-air with a slight dynamic angle
+3. Add subtle shadow below to show it's floating
+4. The clothing must look 3D and have natural fabric draping
+5. Professional fashion editorial lighting
+6. The clothing should fill at least 60% of the frame`,
+  flatlay: `Edit this exact clothing image. Do the following steps:
+1. Keep the EXACT same clothing - same colors, patterns, design
+2. Lay the clothing flat as seen from directly above (bird's eye view)
+3. Neatly arranged with sleeves spread out symmetrically
+4. Professional flat lay photography style
+5. Clean, crisp lighting from above
+6. The clothing should fill at least 60% of the frame`,
+  female: `Place this exact clothing item on a professional female fashion model. Keep clothing identical - same color, design, text, patterns. The model should have a natural professional pose, confident stance. Studio lighting, professional fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  male: `Place this exact clothing item on a professional male fashion model. Athletic build, professional pose, confident stance. Keep clothing identical - same color, design, text, patterns. Studio lighting, professional fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  child_boy: `Place this exact clothing item on a cute child boy model age 6-8. Keep clothing identical - same color, design, text, patterns. Natural smile, playful but neat pose. Studio lighting, professional children's fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  child_girl: `Place this exact clothing item on a cute child girl model age 6-8. Keep clothing identical - same color, design, text, patterns. Natural smile, playful but neat pose. Studio lighting, professional children's fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+};
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -38,7 +51,6 @@ serve(async (req) => {
   }
 
   try {
-    // --- Auth: extract user from JWT ---
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
@@ -48,7 +60,6 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Verify user with their JWT
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -59,12 +70,10 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
-    // --- Check if admin by email ---
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(userId);
     const isAdmin = authUser?.email === ADMIN_EMAIL;
 
-    // --- Usage check (skip for admin) ---
     let currentUsage = 0;
     if (!isAdmin) {
       const { data: profile, error: profileError } = await adminClient
@@ -99,18 +108,19 @@ serve(async (req) => {
       }
     }
 
-    // --- Process image ---
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const { image_base64, background } = await req.json();
+    const { image_base64, background, mode } = await req.json();
     if (!image_base64) throw new Error('No image provided');
 
-    let finalPrompt = BASE_PROMPT;
+    const selectedMode = mode && MODE_PROMPTS[mode] ? mode : 'ghost';
+    let finalPrompt = MODE_PROMPTS[selectedMode];
+
     if (background) {
-      finalPrompt += `\n\nPlace the floating ghost mannequin clothing in this setting: ${background}. Keep the clothing as the main focus, background should be artistic but not distracting.`;
+      finalPrompt += `\n\nPlace the clothing/model in this setting: ${background}. Keep the clothing as the main focus, background should be artistic but not distracting.`;
     } else {
       finalPrompt += `\n\nPure white background.`;
     }
@@ -120,7 +130,7 @@ serve(async (req) => {
       imageUrl = `data:image/png;base64,${imageUrl}`;
     }
 
-    console.log('Calling Lovable AI Gateway...');
+    console.log(`Processing mode: ${selectedMode}, background: ${background ? 'custom' : 'white'}`);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -174,7 +184,6 @@ serve(async (req) => {
       return jsonResponse({ success: false, error: 'No image returned from AI model. The model may not support image generation with this input.' }, 500);
     }
 
-    // --- Increment usage AFTER successful generation (skip for admin) ---
     let newCount = currentUsage + 1;
     if (!isAdmin) {
       await adminClient
