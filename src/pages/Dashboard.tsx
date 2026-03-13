@@ -136,6 +136,10 @@ const Dashboard = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [comparePosition, setComparePosition] = useState(50);
   const [showCompare, setShowCompare] = useState(false);
+  const [showVideoPreview, setShowVideoPreview] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const videoCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
