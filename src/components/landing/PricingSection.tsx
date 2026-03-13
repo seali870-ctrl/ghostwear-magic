@@ -17,7 +17,7 @@ const plans = [
   {
     key: "starter",
     name: null,
-    price: 9,
+    price: 5,
     images: 30,
     features: ["feature1", "feature2", "feature3", "feature4"],
     popular: false,
