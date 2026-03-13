@@ -25,7 +25,7 @@ import {
 
 const ADMIN_EMAIL = "seali870@gmail.com";
 
-type Style = "ghost" | "floating" | "flatlay" | "female" | "male" | "child_boy" | "child_girl" | "teen_boy" | "teen_girl";
+type Style = "ghost" | "floating" | "flatlay" | "female" | "male" | "child_boy" | "child_girl" | "teen_boy" | "teen_girl" | "baby_boy" | "baby_girl";
 
 type BgStyle =
   | "white-studio" | "grey-studio" | "transparent"
@@ -43,6 +43,8 @@ const STYLE_OPTIONS: { key: Style; icon: string; label: string; labelAr: string 
   { key: "child_girl", icon: "👧", label: "Child Girl", labelAr: "طفلة بنت" },
   { key: "teen_boy", icon: "🧑", label: "Teen Boy", labelAr: "مراهق ولد" },
   { key: "teen_girl", icon: "👩‍🦱", label: "Teen Girl", labelAr: "مراهقة بنت" },
+  { key: "baby_boy", icon: "👶", label: "Baby Boy", labelAr: "رضيع ولد" },
+  { key: "baby_girl", icon: "👶", label: "Baby Girl", labelAr: "رضيعة بنت" },
 ];
 
 const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: string; premium: boolean }[] = [

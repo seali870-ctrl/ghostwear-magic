@@ -38,6 +38,8 @@ const MODE_PROMPTS: Record<string, string> = {
   child_girl: `Place this exact clothing item on a cute child girl model age 6-8. Keep clothing identical - same color, design, text, patterns. Natural smile, playful but neat pose. Studio lighting, professional children's fashion photography quality. The clothing should be clearly visible and be the main focus.`,
   teen_boy: `Place this exact clothing item on a teenage male model age 13. Keep clothing identical - same color, design, text, patterns. Natural confident pose, modern and stylish stance. Studio lighting, professional teen fashion photography quality. The clothing should be clearly visible and be the main focus.`,
   teen_girl: `Place this exact clothing item on a teenage female model age 13. Keep clothing identical - same color, design, text, patterns. Natural confident pose, modern and stylish stance. Studio lighting, professional teen fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  baby_boy: `Place this exact clothing item on a cute baby boy model age 0-12 months. Keep clothing identical - same color, design, text, patterns. Adorable natural pose, laying or sitting. Soft warm studio lighting, professional baby fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  baby_girl: `Place this exact clothing item on a cute baby girl model age 0-12 months. Keep clothing identical - same color, design, text, patterns. Adorable natural pose, laying or sitting. Soft warm studio lighting, professional baby fashion photography quality. The clothing should be clearly visible and be the main focus.`,
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
