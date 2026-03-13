@@ -91,9 +91,6 @@ const PricingSection = () => {
                 <span className="text-muted-foreground text-sm">{plan.subtitle}</span>
               </div>
 
-              {"note" in plan && plan.note && (
-                <p className="text-xs text-orange-500 font-medium mb-1">{plan.note}</p>
-              )}
 
               <p className="text-muted-foreground text-sm mb-6">
                 {plan.images === -1 ? t("pricing.unlimited") : `${plan.images} ${t("pricing.images")}`}
