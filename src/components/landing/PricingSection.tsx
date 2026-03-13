@@ -43,9 +43,7 @@ const plans = [
     features: ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"],
     popular: false,
     subtitle: "Per month",
-    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business",
-    badge: "🔥 الشهر الأول فقط",
-    note: "يتجدد بـ $59/شهر بعد ذلك",
+    whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business%20%2449",
   },
 ];
 
