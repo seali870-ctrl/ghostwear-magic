@@ -36,6 +36,8 @@ const MODE_PROMPTS: Record<string, string> = {
   male: `Place this exact clothing item on a professional male fashion model. Athletic build, professional pose, confident stance. Keep clothing identical - same color, design, text, patterns. Studio lighting, professional fashion photography quality. The clothing should be clearly visible and be the main focus.`,
   child_boy: `Place this exact clothing item on a cute child boy model age 6-8. Keep clothing identical - same color, design, text, patterns. Natural smile, playful but neat pose. Studio lighting, professional children's fashion photography quality. The clothing should be clearly visible and be the main focus.`,
   child_girl: `Place this exact clothing item on a cute child girl model age 6-8. Keep clothing identical - same color, design, text, patterns. Natural smile, playful but neat pose. Studio lighting, professional children's fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  teen_boy: `Place this exact clothing item on a teenage male model age 13. Keep clothing identical - same color, design, text, patterns. Natural confident pose, modern and stylish stance. Studio lighting, professional teen fashion photography quality. The clothing should be clearly visible and be the main focus.`,
+  teen_girl: `Place this exact clothing item on a teenage female model age 13. Keep clothing identical - same color, design, text, patterns. Natural confident pose, modern and stylish stance. Studio lighting, professional teen fashion photography quality. The clothing should be clearly visible and be the main focus.`,
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
