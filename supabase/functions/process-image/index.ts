@@ -168,13 +168,32 @@ serve(async (req) => {
         parsedError = errJson.error?.message || errJson.message || errJson.error || errText;
       } catch { /* use raw text */ }
 
-      if (response.status === 429) {
-        return jsonResponse({ success: false, error: `Rate limit exceeded: ${parsedError}` }, 429);
-      }
-      if (response.status === 402) {
-        return jsonResponse({ success: false, error: `AI credits exhausted: ${parsedError}` }, 402);
-      }
-      return jsonResponse({ success: false, error: `AI error (${response.status}): ${parsedError}` }, 500);
+      const errorPayload = {
+        success: false,
+        error:
+          response.status === 429
+            ? `Rate limit exceeded: ${parsedError}`
+            : response.status === 402
+              ? `AI credits exhausted: ${parsedError}`
+              : response.status === 404
+                ? `AI model not found: ${parsedError}`
+                : response.status === 410
+                  ? `AI model unavailable: ${parsedError}`
+                  : `AI error (${response.status}): ${parsedError}`,
+        code:
+          response.status === 429
+            ? 'AI_RATE_LIMITED'
+            : response.status === 402
+              ? 'AI_CREDITS_EXHAUSTED'
+              : response.status === 404
+                ? 'AI_MODEL_NOT_FOUND'
+                : response.status === 410
+                  ? 'AI_MODEL_UNAVAILABLE'
+                  : 'AI_GATEWAY_ERROR',
+        gateway_status: response.status,
+      };
+
+      return jsonResponse(errorPayload);
     }
 
     const data = await response.json();
