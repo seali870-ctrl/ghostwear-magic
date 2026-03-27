@@ -221,12 +221,20 @@ const Dashboard = () => {
   ));
 
   const handleProcess = async () => {
-    if (!uploadedImage) { toast.error("Please upload an image first"); return; }
-    if (!canProcess) { setShowUpgradePrompt(true); return; }
+    if (!uploadedImage) {
+      toast.error("Please upload an image first");
+      return;
+    }
+    if (!canProcess) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
     setProcessing(true);
     setProcessedImage(null);
     setShowCompare(false);
     setRotationDeg(0);
+
     try {
       const selectedBg = BG_OPTIONS.find((b) => b.key === bgStyle);
       const bgDesc = bgStyle === 'white-studio' ? '' : selectedBg?.description || '';
@@ -242,11 +250,55 @@ const Dashboard = () => {
         return;
       }
 
+      if (data?.code === 'AI_CREDITS_EXHAUSTED') {
+        toast.error(
+          language === 'ar'
+            ? 'نفد رصيد الذكاء الاصطناعي للمشروع. أضف رصيدًا من إعدادات Lovable ثم أعد المحاولة.'
+            : 'Lovable AI credits are exhausted. Add credits in Settings → Workspace → Usage and try again.'
+        );
+        return;
+      }
+
+      if (data?.code === 'AI_RATE_LIMITED') {
+        toast.error(
+          language === 'ar'
+            ? 'تم تجاوز الحد المؤقت لطلبات الذكاء الاصطناعي. انتظر قليلًا ثم أعد المحاولة.'
+            : 'AI rate limit reached. Please wait a moment and try again.'
+        );
+        return;
+      }
+
       if (error) {
-        const errorMsg = data?.error || error.message || 'Processing failed';
+        let errorMsg = data?.error || error.message || 'Processing failed';
+        const errorContext = (error as { context?: Response }).context;
+
+        if (errorContext) {
+          try {
+            const parsed = await errorContext.clone().json();
+            errorMsg = parsed?.error || parsed?.message || errorMsg;
+          } catch {
+            try {
+              const rawText = await errorContext.clone().text();
+              if (rawText) {
+                try {
+                  const parsedText = JSON.parse(rawText);
+                  errorMsg = parsedText?.error || parsedText?.message || rawText;
+                } catch {
+                  errorMsg = rawText;
+                }
+              }
+            } catch {
+              // keep fallback message
+            }
+          }
+        }
+
         throw new Error(errorMsg);
       }
-      if (!data?.success) throw new Error(data?.error || 'Processing failed');
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Processing failed');
+      }
 
       setProcessedImage(data.output_url);
       setShowCompare(true);
@@ -258,10 +310,11 @@ const Dashboard = () => {
           setShowUpgradePrompt(true);
         }
       }
+
       toast.success("Image processed successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Processing error:', err);
-      toast.error(err.message || "Failed to process image. Please try again.");
+      toast.error(err instanceof Error ? err.message : 'Failed to process image. Please try again.');
     } finally {
       setProcessing(false);
     }
