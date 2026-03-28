@@ -190,14 +190,23 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('AI response keys:', Object.keys(data));
-    console.log('AI choices structure:', JSON.stringify(data.choices?.[0]?.message).slice(0, 500));
+    console.log('Gemini response keys:', Object.keys(data));
     
-    const outputImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    // Extract image from Gemini response format
+    let outputImage: string | undefined;
+    const candidates = data.candidates;
+    if (candidates && candidates[0]?.content?.parts) {
+      for (const part of candidates[0].content.parts) {
+        if (part.inline_data) {
+          outputImage = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+          break;
+        }
+      }
+    }
 
     if (!outputImage) {
-      console.error('Full AI response:', JSON.stringify(data).slice(0, 2000));
-      return jsonResponse({ success: false, error: 'No image returned from AI model. The model may not support image generation with this input.' }, 500);
+      console.error('Full Gemini response:', JSON.stringify(data).slice(0, 2000));
+      return jsonResponse({ success: false, error: 'No image returned from Gemini. Try again.' }, 500);
     }
 
     let newCount = currentUsage + 1;
