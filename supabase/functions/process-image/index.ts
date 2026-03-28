@@ -112,9 +112,9 @@ serve(async (req) => {
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     const { image_base64, background, mode } = await req.json();
@@ -129,31 +129,43 @@ serve(async (req) => {
       finalPrompt += `\n\nPure white background.`;
     }
 
-    let imageUrl = image_base64;
-    if (!imageUrl.startsWith('data:')) {
-      imageUrl = `data:image/png;base64,${imageUrl}`;
+    // Extract pure base64 data
+    let pureBase64 = image_base64;
+    let mimeType = 'image/png';
+    if (pureBase64.startsWith('data:')) {
+      const match = pureBase64.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (match) {
+        mimeType = match[1];
+        pureBase64 = match[2];
+      } else {
+        pureBase64 = pureBase64.split(',')[1] || pureBase64;
+      }
     }
 
     console.log(`Processing mode: ${selectedMode}, background: ${background ? 'custom' : 'white'}`);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image',
-        messages: [
+        contents: [
           {
-            role: 'user',
-            content: [
-              { type: 'text', text: finalPrompt },
-              { type: 'image_url', image_url: { url: imageUrl } },
+            parts: [
+              { text: finalPrompt },
+              {
+                inline_data: {
+                  mime_type: mimeType,
+                  data: pureBase64,
+                },
+              },
             ],
           },
         ],
-        modalities: ['image', 'text'],
+        generationConfig: {
+          responseModalities: ['IMAGE', 'TEXT'],
+        },
       }),
     });
 
