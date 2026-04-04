@@ -30,7 +30,6 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Verify user
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -39,7 +38,6 @@ serve(async (req) => {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
-    // Check admin by email
     if (user.email !== ADMIN_EMAIL) {
       return jsonResponse({ error: 'Forbidden: Admin access only' }, 403);
     }
@@ -47,7 +45,6 @@ serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { action, ...params } = await req.json();
 
-    // Ensure admin role exists for this user
     await adminClient.from('user_roles').upsert(
       { user_id: user.id, role: 'admin' },
       { onConflict: 'user_id,role' }
@@ -55,11 +52,9 @@ serve(async (req) => {
 
     switch (action) {
       case 'list_users': {
-        // Get all users from auth
         const { data: authUsers, error: authErr } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
         if (authErr) throw authErr;
 
-        // Get all profiles
         const { data: profiles, error: profErr } = await adminClient
           .from('user_profiles')
           .select('*');
@@ -86,7 +81,6 @@ serve(async (req) => {
         const updateData: Record<string, unknown> = { plan_type, images_limit };
         if (images_used !== undefined) updateData.images_used = images_used;
 
-        // Try update first
         const { data: updated, error: updateErr } = await adminClient
           .from('user_profiles')
           .update(updateData)
@@ -95,7 +89,6 @@ serve(async (req) => {
 
         if (updateErr) throw updateErr;
 
-        // If no row existed, insert one
         if (!updated || updated.length === 0) {
           const { error: insertErr } = await adminClient
             .from('user_profiles')
@@ -107,7 +100,7 @@ serve(async (req) => {
       }
 
       case 'grant_access': {
-        const { email, plan_type, images_limit } = params;
+        const { email, plan_type, images_limit, duration_months } = params;
         if (!email || !plan_type) return jsonResponse({ error: 'email and plan_type required' }, 400);
 
         const { data: authUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
@@ -116,9 +109,17 @@ serve(async (req) => {
           return jsonResponse({ error: `User with email ${email} not found` }, 404);
         }
 
-        const newData = { plan_type, images_limit: images_limit ?? -1, images_used: 0 };
+        const months = duration_months || 1;
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + months);
 
-        // Try update first
+        const newData: Record<string, unknown> = {
+          plan_type,
+          images_limit: images_limit ?? 50,
+          images_used: 0,
+          subscription_status: 'active',
+        };
+
         const { data: updated, error: updateErr } = await adminClient
           .from('user_profiles')
           .update(newData)
@@ -127,7 +128,6 @@ serve(async (req) => {
 
         if (updateErr) throw updateErr;
 
-        // If no profile row, insert one
         if (!updated || updated.length === 0) {
           const { error: insertErr } = await adminClient
             .from('user_profiles')
@@ -135,14 +135,19 @@ serve(async (req) => {
           if (insertErr) throw insertErr;
         }
 
-        // Verify the update
         const { data: verify } = await adminClient
           .from('user_profiles')
           .select('plan_type, images_limit')
           .eq('user_id', targetUser.id)
           .single();
 
-        return jsonResponse({ success: true, user_id: targetUser.id, verified: verify });
+        return jsonResponse({
+          success: true,
+          user_id: targetUser.id,
+          verified: verify,
+          duration_months: months,
+          expires_at: expiresAt.toISOString(),
+        });
       }
 
       default:
