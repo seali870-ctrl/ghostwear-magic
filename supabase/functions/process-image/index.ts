@@ -96,7 +96,7 @@ serve(async (req) => {
       if (profile.plan_type === 'free_trial' && profile.images_used >= FREE_TRIAL_LIMIT) {
         return jsonResponse({
           success: false,
-          error: "You've used all 5 free images. Upgrade to continue.",
+          error: "You've used all 10 free images. Upgrade to continue.",
           code: 'FREE_TRIAL_EXHAUSTED',
           images_used: profile.images_used,
         }, 403);
