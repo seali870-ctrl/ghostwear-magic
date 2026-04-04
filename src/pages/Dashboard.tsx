@@ -156,7 +156,7 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
   },
 ];
 
-const FREE_TRIAL_LIMIT = 10;
+const FREE_TRIAL_LIMIT = 5;
 
 const Dashboard = () => {
   const { t, language, setLanguage } = useLanguage();
@@ -368,10 +368,10 @@ const Dashboard = () => {
               <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground mb-1">Free trial complete!</h3>
-                <p className="text-sm text-muted-foreground mb-3">You've used all 10 free images. Upgrade to continue.</p>
+                <p className="text-sm text-muted-foreground mb-3">You've used all 5 free images. Upgrade to continue.</p>
                 <div className="flex gap-2">
-                  <a href="https://api.whatsapp.com/send?phone=201040535481&text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83%20%D9%81%D9%8A%20%D8%A8%D8%A7%D9%82%D8%A9%20Starter%20%249.99" target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" className="btn-gradient">Upgrade to Starter ($9.99/month)</Button>
+                  <a href="https://api.whatsapp.com/send?phone=201040535481&text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83%20%D9%81%D9%8A%20%D8%A8%D8%A7%D9%82%D8%A9%20Starter%20%249" target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" className="btn-gradient">Upgrade to Starter ($9/month)</Button>
                   </a>
                   <Button size="sm" variant="outline" onClick={() => setShowUpgradePrompt(false)}>Maybe later</Button>
                 </div>

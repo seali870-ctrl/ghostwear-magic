@@ -17,20 +17,13 @@ import { Loader2, Shield, Search, Gift, Crown, ArrowLeft } from "lucide-react";
 const ADMIN_EMAIL = "seali870@gmail.com";
 
 const PLAN_CONFIG: Record<string, { images_limit: number; label: string }> = {
-  free_trial: { images_limit: 10, label: "Free Trial (10 images)" },
-  starter: { images_limit: 50, label: "Starter (50 images/mo)" },
-  pro: { images_limit: 200, label: "Pro (200 images/mo)" },
-  business: { images_limit: 500, label: "Business (500 images/mo)" },
+  free_trial: { images_limit: 5, label: "Free Trial" },
+  starter: { images_limit: 30, label: "Starter (30 images)" },
+  pro: { images_limit: 100, label: "Pro (100 images)" },
+  business: { images_limit: -1, label: "Business (Unlimited)" },
 };
 
 const GRANT_PLANS = ["starter", "pro", "business"] as const;
-
-const DURATION_OPTIONS = [
-  { value: "1", label: "1 Month" },
-  { value: "3", label: "3 Months" },
-  { value: "6", label: "6 Months" },
-  { value: "12", label: "1 Year" },
-];
 
 interface UserData {
   id: string;
@@ -40,7 +33,6 @@ interface UserData {
     plan_type: string;
     images_used: number;
     images_limit: number;
-    subscription_status: string | null;
   } | null;
 }
 
@@ -51,7 +43,6 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [grantEmail, setGrantEmail] = useState("");
   const [grantPlan, setGrantPlan] = useState<string>("business");
-  const [grantDuration, setGrantDuration] = useState<string>("1");
   const [granting, setGranting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -95,10 +86,8 @@ const Admin = () => {
         email: grantEmail.trim(),
         plan_type: grantPlan,
         images_limit: config.images_limit,
-        duration_months: parseInt(grantDuration),
       });
-      const durationLabel = DURATION_OPTIONS.find(d => d.value === grantDuration)?.label || grantDuration;
-      toast.success(`${config.label} access granted to ${grantEmail} for ${durationLabel}`);
+      toast.success(`${config.label} access granted to ${grantEmail}`);
       setGrantEmail("");
       fetchUsers();
     } catch (err: any) {
@@ -157,16 +146,16 @@ const Admin = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Grant Access */}
+        {/* Grant Unlimited Access */}
         <div className="card-elevated p-6">
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-lg font-bold text-foreground">Grant Subscription</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">Grant Plan Access</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Enter a user's email, select a plan and duration to grant them access.
+            Enter a user's email and select a plan to grant them free access.
           </p>
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex gap-3 items-center">
             <Input
               placeholder="user@example.com"
               value={grantEmail}
@@ -182,18 +171,6 @@ const Admin = () => {
                 {GRANT_PLANS.map((key) => (
                   <SelectItem key={key} value={key}>
                     {PLAN_CONFIG[key].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={grantDuration} onValueChange={setGrantDuration}>
-              <SelectTrigger className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DURATION_OPTIONS.map((d) => (
-                  <SelectItem key={d.value} value={d.value}>
-                    {d.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -253,7 +230,7 @@ const Admin = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {u.profile?.images_used || 0} / {u.profile?.images_limit === -1 ? "∞" : u.profile?.images_limit || 10}
+                        {u.profile?.images_used || 0} / {u.profile?.images_limit === -1 ? "∞" : u.profile?.images_limit || 5}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(u.created_at).toLocaleDateString()}
@@ -263,7 +240,7 @@ const Admin = () => {
                           value={u.profile?.plan_type || "free_trial"}
                           onValueChange={(val) => handleUpdatePlan(u.id, val)}
                         >
-                          <SelectTrigger className="w-48 h-8 text-xs">
+                          <SelectTrigger className="w-40 h-8 text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
