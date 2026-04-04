@@ -197,8 +197,10 @@ serve(async (req) => {
     const candidates = data.candidates;
     if (candidates && candidates[0]?.content?.parts) {
       for (const part of candidates[0].content.parts) {
-        if (part.inline_data) {
-          outputImage = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+        const imgData = part.inline_data || part.inlineData;
+        if (imgData) {
+          const mime = imgData.mime_type || imgData.mimeType || 'image/png';
+          outputImage = `data:${mime};base64,${imgData.data}`;
           break;
         }
       }
