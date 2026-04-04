@@ -156,7 +156,7 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
   },
 ];
 
-const FREE_TRIAL_LIMIT = 5;
+const FREE_TRIAL_LIMIT = 10;
 
 const Dashboard = () => {
   const { t, language, setLanguage } = useLanguage();
