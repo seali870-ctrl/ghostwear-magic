@@ -107,7 +107,7 @@ serve(async (req) => {
       }
 
       case 'grant_access': {
-        const { email, plan_type, images_limit } = params;
+        const { email, plan_type, images_limit, duration_months } = params;
         if (!email || !plan_type) return jsonResponse({ error: 'email and plan_type required' }, 400);
 
         const { data: authUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
@@ -116,7 +116,16 @@ serve(async (req) => {
           return jsonResponse({ error: `User with email ${email} not found` }, 404);
         }
 
-        const newData = { plan_type, images_limit: images_limit ?? -1, images_used: 0 };
+        const months = typeof duration_months === 'number' && duration_months > 0 ? duration_months : 1;
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + months);
+
+        const newData: Record<string, unknown> = {
+          plan_type,
+          images_limit: images_limit ?? -1,
+          images_used: 0,
+          subscription_status: 'active',
+        };
 
         // Try update first
         const { data: updated, error: updateErr } = await adminClient
