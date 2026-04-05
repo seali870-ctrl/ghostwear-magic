@@ -88,14 +88,16 @@ const Admin = () => {
     const config = PLAN_CONFIG[grantPlan];
     if (!config) return;
     setGranting(true);
+    const months = parseInt(grantDuration);
     try {
       await adminInvoke({
         action: "grant_access",
         email: grantEmail.trim(),
         plan_type: grantPlan,
         images_limit: config.images_limit,
+        duration_months: months,
       });
-      toast.success(`${config.label} access granted to ${grantEmail}`);
+      toast.success(`${config.label} (${months} month${months > 1 ? "s" : ""}) granted to ${grantEmail}`);
       setGrantEmail("");
       fetchUsers();
     } catch (err: any) {
@@ -163,7 +165,7 @@ const Admin = () => {
           <p className="text-sm text-muted-foreground mb-4">
             Enter a user's email and select a plan to grant them free access.
           </p>
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center">
             <Input
               placeholder="user@example.com"
               value={grantEmail}
@@ -179,6 +181,18 @@ const Admin = () => {
                 {GRANT_PLANS.map((key) => (
                   <SelectItem key={key} value={key}>
                     {PLAN_CONFIG[key].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={grantDuration} onValueChange={setGrantDuration}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DURATION_OPTIONS.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
                   </SelectItem>
                 ))}
               </SelectContent>
