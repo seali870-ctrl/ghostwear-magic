@@ -16,9 +16,9 @@ const WHATSAPP_LINK = "https://api.whatsapp.com/send?phone=201040535481";
 const TELEGRAM_LINK = "https://t.me/TTRQ33";
 
 const plans = [
-  { name: "Starter", price: "$5", period: "/mo", images: "30 images/month", whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%245" },
-  { name: "Pro", price: "$15", period: "/mo", images: "100 images/month", popular: true, whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2415" },
-  { name: "Business", price: "$49", period: "/mo", images: "Unlimited images", whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business%20%2449" },
+  { name: "Starter", price: "$9.99", period: "/mo", images: "50 images/month", whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Starter%20%249.99" },
+  { name: "Pro", price: "$24.99", period: "/mo", images: "200 images/month", popular: true, whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Pro%20%2424.99" },
+  { name: "Business", price: "$59.99", period: "/mo", images: "500 images/month", whatsapp: "https://api.whatsapp.com/send?phone=201040535481&text=أريد%20الاشتراك%20في%20باقة%20Business%20%2459.99" },
 ];
 
 const paymentMethods = [
