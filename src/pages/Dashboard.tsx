@@ -158,6 +158,42 @@ const BG_OPTIONS: { key: BgStyle; label: string; preview: string; description: s
 
 const FREE_TRIAL_LIMIT = 5;
 
+type ProcessImageResponse = {
+  success?: boolean;
+  error?: string;
+  code?: string;
+  images_used?: number;
+  output_url?: string;
+  retry_after_seconds?: number;
+};
+
+const getFunctionErrorDetails = async (error: unknown) => {
+  const fallbackMessage = error instanceof Error ? error.message : "Processing failed";
+  const context = (error as { context?: Response })?.context;
+
+  if (!context) {
+    return { message: fallbackMessage };
+  }
+
+  try {
+    const payload = (await context.clone().json()) as ProcessImageResponse;
+    return {
+      status: context.status,
+      message: payload.error || fallbackMessage,
+      code: payload.code,
+      imagesUsed: payload.images_used,
+      retryAfterSeconds: payload.retry_after_seconds,
+    };
+  } catch {
+    try {
+      const text = await context.clone().text();
+      return { status: context.status, message: text || fallbackMessage };
+    } catch {
+      return { status: context.status, message: fallbackMessage };
+    }
+  }
+};
+
 const Dashboard = () => {
   const { t, language, setLanguage } = useLanguage();
   const { user, signOut, loading: authLoading } = useAuth();
@@ -234,34 +270,63 @@ const Dashboard = () => {
         body: { image_base64: uploadedImage, background: bgDesc, mode: style },
       });
 
-      if (data?.code === 'FREE_TRIAL_EXHAUSTED' || data?.code === 'PLAN_LIMIT_REACHED') {
-        if (data.images_used !== undefined && userProfile) {
-          setUserProfile({ ...userProfile, images_used: data.images_used });
+      const response = data as ProcessImageResponse | null;
+
+      if (response?.code === 'FREE_TRIAL_EXHAUSTED' || response?.code === 'PLAN_LIMIT_REACHED') {
+        if (response.images_used !== undefined && userProfile) {
+          setUserProfile({ ...userProfile, images_used: response.images_used });
         }
         setShowUpgradePrompt(true);
         return;
       }
 
       if (error) {
-        const errorMsg = data?.error || error.message || 'Processing failed';
-        throw new Error(errorMsg);
-      }
-      if (!data?.success) throw new Error(data?.error || 'Processing failed');
+        const details = await getFunctionErrorDetails(error);
 
-      setProcessedImage(data.output_url);
+        if (details.code === 'FREE_TRIAL_EXHAUSTED' || details.code === 'PLAN_LIMIT_REACHED') {
+          if (details.imagesUsed !== undefined && userProfile) {
+            setUserProfile({ ...userProfile, images_used: details.imagesUsed });
+          }
+          setShowUpgradePrompt(true);
+          return;
+        }
+
+        if (details.status === 429 || details.code === 'AI_RATE_LIMITED' || details.code === 'AI_QUOTA_EXCEEDED') {
+          toast.error(details.message || `Rate limit reached. Please try again${details.retryAfterSeconds ? ` in about ${details.retryAfterSeconds}s` : ' shortly'}.`);
+          return;
+        }
+
+        if (details.status === 402 || details.code === 'AI_CREDITS_EXHAUSTED') {
+          toast.error(details.message || 'AI credits are exhausted. Please top up and try again.');
+          return;
+        }
+
+        throw new Error(details.message || 'Processing failed');
+      }
+
+      if (!response?.success) {
+        if (response?.code === 'AI_RATE_LIMITED' || response?.code === 'AI_QUOTA_EXCEEDED') {
+          toast.error(response.error || 'Rate limit reached. Please try again shortly.');
+          return;
+        }
+
+        throw new Error(response?.error || 'Processing failed');
+      }
+
+      setProcessedImage(response.output_url || null);
       setShowCompare(true);
 
-      if (userProfile && data.images_used !== undefined) {
-        const updated = { ...userProfile, images_used: data.images_used };
+      if (userProfile && response.images_used !== undefined) {
+        const updated = { ...userProfile, images_used: response.images_used };
         setUserProfile(updated);
         if (updated.plan_type === 'free_trial' && updated.images_used >= FREE_TRIAL_LIMIT) {
           setShowUpgradePrompt(true);
         }
       }
       toast.success("Image processed successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Processing error:', err);
-      toast.error(err.message || "Failed to process image. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to process image. Please try again.");
     } finally {
       setProcessing(false);
     }

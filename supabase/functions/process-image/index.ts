@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const FREE_TRIAL_LIMIT = 5;
 const ADMIN_EMAIL = 'seali870@gmail.com';
+const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 const MODE_PROMPTS: Record<string, string> = {
   ghost: `Edit this exact clothing image. Do the following steps:
@@ -47,6 +48,19 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+function getRetryAfterSeconds(message: string, retryAfterHeader: string | null) {
+  const headerSeconds = Number(retryAfterHeader);
+  if (Number.isFinite(headerSeconds) && headerSeconds > 0) {
+    return Math.ceil(headerSeconds);
+  }
+
+  const match = message.match(/Please retry in\s+([\d.]+)s/i);
+  if (!match) return undefined;
+
+  const parsedSeconds = Number(match[1]);
+  return Number.isFinite(parsedSeconds) ? Math.ceil(parsedSeconds) : undefined;
 }
 
 serve(async (req) => {
@@ -144,7 +158,7 @@ serve(async (req) => {
 
     console.log(`Processing mode: ${selectedMode}, background: ${background ? 'custom' : 'white'}`);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -181,12 +195,35 @@ serve(async (req) => {
       } catch { /* use raw text */ }
 
       if (response.status === 429) {
-        return jsonResponse({ success: false, error: `Rate limit exceeded: ${parsedError}` }, 429);
+        const retryAfterSeconds = getRetryAfterSeconds(parsedError, response.headers.get('retry-after'));
+        const isQuotaExceeded = /quota exceeded|billing/i.test(parsedError);
+
+        return jsonResponse({
+          success: false,
+          error: isQuotaExceeded
+            ? 'Image generation quota is exhausted for the configured Gemini key. Verify billing/quota for that key, then try again.'
+            : `Rate limit reached. Please try again${retryAfterSeconds ? ` in about ${retryAfterSeconds} seconds` : ' shortly'}.`,
+          code: isQuotaExceeded ? 'AI_QUOTA_EXCEEDED' : 'AI_RATE_LIMITED',
+          retry_after_seconds: retryAfterSeconds,
+          details: parsedError,
+          model: GEMINI_IMAGE_MODEL,
+        }, 429);
       }
       if (response.status === 402) {
-        return jsonResponse({ success: false, error: `AI credits exhausted: ${parsedError}` }, 402);
+        return jsonResponse({
+          success: false,
+          error: 'AI credits exhausted for the configured Gemini key. Please add billing or credits and try again.',
+          code: 'AI_CREDITS_EXHAUSTED',
+          details: parsedError,
+          model: GEMINI_IMAGE_MODEL,
+        }, 402);
       }
-      return jsonResponse({ success: false, error: `AI error (${response.status}): ${parsedError}` }, 500);
+      return jsonResponse({
+        success: false,
+        error: `AI error (${response.status}): ${parsedError}`,
+        code: 'AI_ERROR',
+        model: GEMINI_IMAGE_MODEL,
+      }, 500);
     }
 
     const data = await response.json();
