@@ -6,7 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const FREE_TRIAL_LIMIT = 5;
+const FREE_TRIAL_LIMIT = 10;
+
 const ADMIN_EMAIL = 'seali870@gmail.com';
 const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image';
 
@@ -110,7 +111,7 @@ serve(async (req) => {
       if (profile.plan_type === 'free_trial' && profile.images_used >= FREE_TRIAL_LIMIT) {
         return jsonResponse({
           success: false,
-          error: "You've used all 5 free images. Upgrade to continue.",
+          error: "You've used all 10 free trial images. Upgrade to continue.",
           code: 'FREE_TRIAL_EXHAUSTED',
           images_used: profile.images_used,
         }, 403);

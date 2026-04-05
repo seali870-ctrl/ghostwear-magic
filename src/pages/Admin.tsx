@@ -17,13 +17,20 @@ import { Loader2, Shield, Search, Gift, Crown, ArrowLeft } from "lucide-react";
 const ADMIN_EMAIL = "seali870@gmail.com";
 
 const PLAN_CONFIG: Record<string, { images_limit: number; label: string }> = {
-  free_trial: { images_limit: 5, label: "Free Trial" },
-  starter: { images_limit: 30, label: "Starter (30 images)" },
-  pro: { images_limit: 100, label: "Pro (100 images)" },
-  business: { images_limit: -1, label: "Business (Unlimited)" },
+  free_trial: { images_limit: 10, label: "Free Trial (10 images)" },
+  starter: { images_limit: 50, label: "Starter (50 images)" },
+  pro: { images_limit: 200, label: "Pro (200 images)" },
+  business: { images_limit: 500, label: "Business (500 images)" },
 };
 
 const GRANT_PLANS = ["starter", "pro", "business"] as const;
+
+const DURATION_OPTIONS = [
+  { value: "1", label: "1 Month" },
+  { value: "3", label: "3 Months" },
+  { value: "6", label: "6 Months" },
+  { value: "12", label: "1 Year" },
+] as const;
 
 interface UserData {
   id: string;
@@ -43,6 +50,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [grantEmail, setGrantEmail] = useState("");
   const [grantPlan, setGrantPlan] = useState<string>("business");
+  const [grantDuration, setGrantDuration] = useState<string>("1");
   const [granting, setGranting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -80,14 +88,16 @@ const Admin = () => {
     const config = PLAN_CONFIG[grantPlan];
     if (!config) return;
     setGranting(true);
+    const months = parseInt(grantDuration);
     try {
       await adminInvoke({
         action: "grant_access",
         email: grantEmail.trim(),
         plan_type: grantPlan,
         images_limit: config.images_limit,
+        duration_months: months,
       });
-      toast.success(`${config.label} access granted to ${grantEmail}`);
+      toast.success(`${config.label} (${months} month${months > 1 ? "s" : ""}) granted to ${grantEmail}`);
       setGrantEmail("");
       fetchUsers();
     } catch (err: any) {
@@ -155,7 +165,7 @@ const Admin = () => {
           <p className="text-sm text-muted-foreground mb-4">
             Enter a user's email and select a plan to grant them free access.
           </p>
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center">
             <Input
               placeholder="user@example.com"
               value={grantEmail}
@@ -171,6 +181,18 @@ const Admin = () => {
                 {GRANT_PLANS.map((key) => (
                   <SelectItem key={key} value={key}>
                     {PLAN_CONFIG[key].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={grantDuration} onValueChange={setGrantDuration}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DURATION_OPTIONS.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
                   </SelectItem>
                 ))}
               </SelectContent>
